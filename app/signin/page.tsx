@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -39,12 +40,12 @@ export default function SignIn() {
           name="password"
           placeholder="Password"
         />
-        <button
+        <Button
           className="bg-foreground text-background rounded-md"
           type="submit"
         >
           {flow === "signIn" ? "Sign in" : "Sign up"}
-        </button>
+        </Button>
         <div className="flex flex-row gap-2">
           <span>
             {flow === "signIn"

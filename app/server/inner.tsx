@@ -2,6 +2,7 @@
 
 import { Preloaded, useMutation, usePreloadedQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { Button } from "@/components/ui/button";
 
 export default function Home({
   preloaded,
@@ -18,14 +19,14 @@ export default function Home({
           <pre>{JSON.stringify(data, null, 2)}</pre>
         </code>
       </div>
-      <button
+      <Button
         className="bg-foreground text-background px-4 py-2 rounded-md mx-auto"
         onClick={() => {
           void addNumber({ value: Math.floor(Math.random() * 10) });
         }}
       >
         Add a random number
-      </button>
+      </Button>
     </>
   );
 }

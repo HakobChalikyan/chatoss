@@ -5,6 +5,7 @@ import { api } from "../convex/_generated/api";
 import Link from "next/link";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
@@ -30,7 +31,7 @@ function SignOutButton() {
   return (
     <>
       {isAuthenticated && (
-        <button
+        <Button
           className="bg-slate-200 dark:bg-slate-800 text-foreground rounded-md px-2 py-1"
           onClick={() =>
             void signOut().then(() => {
@@ -39,7 +40,7 @@ function SignOutButton() {
           }
         >
           Sign out
-        </button>
+        </Button>
       )}
     </>
   );
@@ -68,14 +69,14 @@ function Content() {
         is persisted in the Convex cloud database!
       </p>
       <p>
-        <button
+        <Button
           className="bg-foreground text-background text-sm px-4 py-2 rounded-md"
           onClick={() => {
             void addNumber({ value: Math.floor(Math.random() * 10) });
           }}
         >
           Add a random number
-        </button>
+        </Button>
       </p>
       <p>
         Numbers:{" "}
