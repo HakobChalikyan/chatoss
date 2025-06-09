@@ -35,11 +35,15 @@ export const createChat = mutation({
       fileIds: args.fileIds,
     });
 
-    await ctx.scheduler.runAfter(0, internal.chats.generateAIResponse, {
-      userId,
-      chatId,
-      model: args.model,
-    });
+    await ctx.scheduler.runAfter(
+      0,
+      internal.chats.generateAIResponseStreaming,
+      {
+        userId,
+        chatId,
+        model: args.model,
+      },
+    );
 
     return chatId;
   },
@@ -71,17 +75,21 @@ export const sendMessage = mutation({
       lastMessageAt: Date.now(),
     });
 
-    await ctx.scheduler.runAfter(0, internal.chats.generateAIResponse, {
-      userId,
-      chatId: args.chatId,
-      model: chat.model,
-    });
+    await ctx.scheduler.runAfter(
+      0,
+      internal.chats.generateAIResponseStreaming,
+      {
+        userId,
+        chatId: args.chatId,
+        model: chat.model,
+      },
+    );
 
     return null;
   },
 });
 
-export const generateAIResponse = internalAction({
+export const generateAIResponseStreaming = internalAction({
   args: {
     userId: v.id("users"),
     chatId: v.id("chats"),
@@ -114,19 +122,43 @@ export const generateAIResponse = internalAction({
         apiKey: apiKeyData.apiKey,
       });
 
+      // Create a placeholder message for streaming
+      const messageId = await ctx.runMutation(
+        internal.chats.createStreamingMessage,
+        {
+          chatId: args.chatId,
+        },
+      );
+
       const response = await openai.chat.completions.create({
         // model: args.model === "gpt-4o-mini" ? "gpt-4o-mini" : "gpt-4.1-nano",
         model: "qwen/qwq-32b:free",
         messages: openaiMessages,
         max_tokens: 1000,
+        stream: true,
       });
 
-      const content = response.choices[0]?.message?.content;
-      if (!content) throw new Error("No response from AI");
+      let fullContent = "";
 
-      await ctx.runMutation(internal.chats.addAIMessage, {
-        chatId: args.chatId,
-        content,
+      for await (const chunk of response) {
+        const content = chunk.choices[0]?.delta?.content || "";
+        if (content) {
+          fullContent += content;
+
+          // Update the streaming message with accumulated content
+          await ctx.runMutation(internal.chats.updateStreamingMessage, {
+            messageId,
+            content: fullContent,
+            isComplete: false,
+          });
+        }
+      }
+
+      // Mark the message as complete
+      await ctx.runMutation(internal.chats.updateStreamingMessage, {
+        messageId,
+        content: fullContent,
+        isComplete: true,
       });
     } catch (error) {
       console.error("AI response error:", error);
@@ -136,6 +168,40 @@ export const generateAIResponse = internalAction({
           "I apologize, but I encountered an error generating a response. Please try again.",
       });
     }
+  },
+});
+
+export const createStreamingMessage = internalMutation({
+  args: {
+    chatId: v.id("chats"),
+  },
+  handler: async (ctx, args) => {
+    const messageId = await ctx.db.insert("messages", {
+      chatId: args.chatId,
+      role: "assistant",
+      content: "",
+      isStreaming: true,
+    });
+
+    await ctx.db.patch(args.chatId, {
+      lastMessageAt: Date.now(),
+    });
+
+    return messageId;
+  },
+});
+
+export const updateStreamingMessage = internalMutation({
+  args: {
+    messageId: v.id("messages"),
+    content: v.string(),
+    isComplete: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.messageId, {
+      content: args.content,
+      isStreaming: !args.isComplete,
+    });
   },
 });
 

@@ -35,6 +35,7 @@ export default defineSchema({
     role: v.union(v.literal("user"), v.literal("assistant")),
     content: v.string(),
     fileIds: v.optional(v.array(v.id("_storage"))),
+    isStreaming: v.optional(v.boolean()),
   }).index("by_chat", ["chatId"]),
 
   chatFiles: defineTable({

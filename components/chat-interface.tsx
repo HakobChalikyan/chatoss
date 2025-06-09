@@ -25,6 +25,7 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   _creationTime: number;
+  isStreaming?: boolean;
   files?: Array<{
     id: Id<"_storage">;
     url: string | null;
@@ -304,6 +305,26 @@ export function ChatInterface({
     );
   };
 
+  const StreamingIndicator = () => (
+    <div className="flex items-center gap-1 text-gray-400">
+      <div className="flex space-x-1">
+        <div
+          className="w-1 h-1 bg-current rounded-full animate-bounce"
+          style={{ animationDelay: "0ms" }}
+        ></div>
+        <div
+          className="w-1 h-1 bg-current rounded-full animate-bounce"
+          style={{ animationDelay: "150ms" }}
+        ></div>
+        <div
+          className="w-1 h-1 bg-current rounded-full animate-bounce"
+          style={{ animationDelay: "300ms" }}
+        ></div>
+      </div>
+      <span className="text-xs ml-1">AI is typing...</span>
+    </div>
+  );
+
   return (
     <div className="flex flex-col h-full">
       {!isNewChat && chat && (
@@ -408,7 +429,12 @@ export function ChatInterface({
                       : "bg-gray-100 text-gray-800",
                   )}
                 >
-                  <div className="whitespace-pre-wrap">{message.content}</div>
+                  <div className="whitespace-pre-wrap">
+                    {message.content}
+                    {message.isStreaming && message.content && (
+                      <span className="inline-block w-2 h-5 bg-current ml-1 animate-pulse"></span>
+                    )}
+                  </div>
                   {renderMessageFiles(message.files)}
                   <div
                     className={cn(
@@ -418,7 +444,10 @@ export function ChatInterface({
                         : "text-gray-500",
                     )}
                   >
-                    {formatTime(message._creationTime)}
+                    <span>{formatTime(message._creationTime)}</span>
+                    {message.isStreaming && !message.content && (
+                      <StreamingIndicator />
+                    )}
                   </div>
                 </div>
               </div>
