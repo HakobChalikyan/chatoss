@@ -10,98 +10,314 @@ import {
   Search,
   Paperclip,
 } from "lucide-react";
+import { useMutation, useQuery } from "convex/react";
+import { toast } from "sonner";
+import { Id } from "@/convex/_generated/dataModel";
+import { api } from "@/convex/_generated/api";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useSidebar } from "@/components/ui/sidebar";
 
 interface Message {
-  id: string;
-  content: string;
+  _id: Id<"messages">;
   role: "user" | "assistant";
-  timestamp: Date;
+  content: string;
+  _creationTime: number;
+  files?: Array<{
+    id: Id<"_storage">;
+    url: string | null;
+    metadata: any;
+  }>;
 }
 
 interface ChatInterfaceProps {
-  conversationId?: string;
+  conversationId?: Id<"chats"> | "default";
+  onChatCreated?: (chatId: Id<"chats">) => void;
 }
+
+const AI_MODELS = [
+  {
+    id: "qwen/qwq-32b:free",
+    name: "Qwen qwq-32b",
+    description: "Free testing model",
+  },
+];
 
 export function ChatInterface({
   conversationId = "default",
+  onChatCreated,
 }: ChatInterfaceProps) {
   const [input, setInput] = React.useState("");
-  const [messages, setMessages] = React.useState<Message[]>([]);
+  const [uploadedFiles, setUploadedFiles] = React.useState<
+    Array<{
+      file: File;
+      storageId: Id<"_storage">;
+    }>
+  >([]);
+  const [isUploading, setIsUploading] = React.useState(false);
   const [isNewChat, setIsNewChat] = React.useState(true);
+  const [isCreating, setIsCreating] = React.useState(false);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const { isMobile, state } = useSidebar();
+
+  const createChat = useMutation(api.chats.createChat);
+  const sendMessage = useMutation(api.chats.sendMessage);
+  const generateUploadUrl = useMutation(api.chats.generateUploadUrl);
+  const saveFileToChat = useMutation(api.chats.saveFileToChat);
+  const chat = useQuery(
+    api.chats.getChat,
+    conversationId !== "default"
+      ? { chatId: conversationId as Id<"chats"> }
+      : "skip",
+  );
 
   // Scroll to bottom when messages change
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [chat?.messages]);
 
   // Reset state when conversation changes
   React.useEffect(() => {
-    if (conversationId === "today-1") {
-      setIsNewChat(false);
-      setMessages([
-        {
-          id: "1",
-          content: "explain --force vs --legacy-peer-deps",
-          role: "user",
-          timestamp: new Date(Date.now() - 1000 * 60 * 5),
-        },
-        {
-          id: "2",
-          content: `When managing Node.js packages, you'll sometimes encounter issues with peerDependencies. These are dependencies that a package expects its host environment (your project) to provide, rather than providing them itself. This allows for more flexible dependency trees and prevents multiple instances of the same dependency, which can cause problems, especially with UI frameworks.
-
-The flags --force and --legacy-peer-deps are used with npm install (and yarn install, though yarn has its own slight variations) to handle these peerDependency conflicts.
-
-Let's break down each:
-
---force (or -f)
-
-The --force flag is a much more aggressive and generally less recommended approach for resolving dependency conflicts. It tells npm to install all dependencies, even if it means ignoring warnings and potential issues, including peerDependency conflicts.`,
-          role: "assistant",
-          timestamp: new Date(Date.now() - 1000 * 60 * 4),
-        },
-      ]);
-    } else {
+    if (conversationId === "default") {
       setIsNewChat(true);
-      setMessages([]);
+      setUploadedFiles([]);
+    } else {
+      setIsNewChat(false);
     }
   }, [conversationId]);
 
-  const handleSubmit = (e: React.FormEvent | React.KeyboardEvent) => {
+  const handleFileUpload = async (files: FileList) => {
+    if (files.length === 0) return;
+
+    setIsUploading(true);
+    const newFiles: Array<{ file: File; storageId: Id<"_storage"> }> = [];
+
+    try {
+      for (const file of Array.from(files)) {
+        if (file.size > 10 * 1024 * 1024) {
+          // 10MB limit
+          toast.error(`File ${file.name} is too large (max 10MB)`);
+          continue;
+        }
+
+        const uploadUrl = await generateUploadUrl();
+        const result = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": file.type },
+          body: file,
+        });
+
+        if (!result.ok) {
+          throw new Error(`Upload failed for ${file.name}`);
+        }
+
+        const { storageId } = await result.json();
+
+        if (conversationId !== "default") {
+          await saveFileToChat({
+            chatId: conversationId as Id<"chats">,
+            storageId,
+            fileName: file.name,
+            fileType: file.type,
+            fileSize: file.size,
+          });
+        }
+
+        newFiles.push({ file, storageId });
+      }
+
+      setUploadedFiles((prev) => [...prev, ...newFiles]);
+      toast.success(`${newFiles.length} file(s) uploaded`);
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload files");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent | React.KeyboardEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() && uploadedFiles.length === 0) return;
 
-    // Add user message
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: input,
-      role: "user",
-      timestamp: new Date(),
-    };
+    if (isNewChat) {
+      setIsCreating(true);
+      try {
+        const chatId = await createChat({
+          title: input.trim().slice(0, 50) + (input.length > 50 ? "..." : ""),
+          model: AI_MODELS[0].id,
+          initialMessage: input.trim(),
+        });
+        onChatCreated?.(chatId);
+        toast.success("Chat created successfully");
+        setIsNewChat(false);
+      } catch (error) {
+        toast.error("Failed to create chat");
+      } finally {
+        setIsCreating(false);
+      }
+    } else {
+      try {
+        const messageText = input.trim() || "📎 Files attached";
+        const fileIds = uploadedFiles.map((f) => f.storageId);
 
-    setMessages((prev) => [...prev, userMessage]);
+        await sendMessage({
+          chatId: conversationId as Id<"chats">,
+          content: messageText,
+          fileIds: fileIds.length > 0 ? fileIds : undefined,
+        });
+      } catch (error) {
+        toast.error("Failed to send message");
+      }
+    }
+
     setInput("");
-    setIsNewChat(false);
+    setUploadedFiles([]);
+  };
 
-    // Simulate assistant response
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: `Thanks for your message! This is a simulated response to: "${input}"`,
-        role: "assistant",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-    }, 1000);
+  const removeUploadedFile = (index: number) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const formatTime = (timestamp: number) => {
+    return new Date(timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const renderFilePreview = (
+    file: { file: File; storageId: Id<"_storage"> },
+    index: number,
+  ) => {
+    const isImage = file.file.type.startsWith("image/");
+
+    return (
+      <div
+        key={index}
+        className="relative bg-gray-100 rounded-lg p-2 flex items-center gap-2"
+      >
+        {isImage ? (
+          <img
+            src={URL.createObjectURL(file.file)}
+            alt={file.file.name}
+            className="w-8 h-8 object-cover rounded"
+          />
+        ) : (
+          <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
+            <svg
+              className="w-4 h-4 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          </div>
+        )}
+        <span className="text-sm text-gray-700 truncate flex-1">
+          {file.file.name}
+        </span>
+        <button
+          onClick={() => removeUploadedFile(index)}
+          className="text-gray-400 hover:text-red-500 p-1"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+    );
+  };
+
+  const renderMessageFiles = (files: Message["files"]) => {
+    if (!files || files.length === 0) return null;
+
+    return (
+      <div className="mt-2 space-y-2">
+        {files.map((file, index) => {
+          const isImage = file.metadata?.contentType?.startsWith("image/");
+
+          return (
+            <div key={index} className="bg-gray-50 rounded-lg p-2">
+              {isImage && file.url ? (
+                <img
+                  src={file.url}
+                  alt="Uploaded image"
+                  className="max-w-xs max-h-48 object-contain rounded"
+                />
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
+                    <svg
+                      className="w-4 h-4 text-blue-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </div>
+                  <span className="text-sm text-gray-700">
+                    {file.metadata?.contentType || "File"}
+                  </span>
+                  {file.url && (
+                    <a
+                      href={file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 text-sm"
+                    >
+                      Download
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto p-4">
+      {!isNewChat && chat && (
+        <div className="p-4 border-b border-gray-200 bg-white">
+          <div>
+            <h1 className="text-lg font-semibold text-gray-800">
+              {chat.title}
+            </h1>
+            <p className="text-sm text-gray-500">{chat.model}</p>
+          </div>
+        </div>
+      )}
+
+      <div className="flex-1 overflow-y-auto p-4 pb-[200px]">
         {isNewChat ? (
           <div className="flex flex-col items-center justify-center h-full">
             <h1 className="text-3xl font-bold mb-8">
@@ -145,24 +361,30 @@ The --force flag is a much more aggressive and generally less recommended approa
               <Button
                 variant="ghost"
                 className="w-full justify-start text-left h-auto py-3"
+                onClick={() => setInput("How does AI work?")}
               >
                 How does AI work?
               </Button>
               <Button
                 variant="ghost"
                 className="w-full justify-start text-left h-auto py-3"
+                onClick={() => setInput("Are black holes real?")}
               >
                 Are black holes real?
               </Button>
               <Button
                 variant="ghost"
                 className="w-full justify-start text-left h-auto py-3"
+                onClick={() =>
+                  setInput('How many Rs are in the word "strawberry"?')
+                }
               >
                 How many Rs are in the word "strawberry"?
               </Button>
               <Button
                 variant="ghost"
                 className="w-full justify-start text-left h-auto py-3"
+                onClick={() => setInput("What is the meaning of life?")}
               >
                 What is the meaning of life?
               </Button>
@@ -170,30 +392,35 @@ The --force flag is a much more aggressive and generally less recommended approa
           </div>
         ) : (
           <div className="space-y-6 pb-4">
-            {messages.map((message) => (
+            {chat?.messages.map((message) => (
               <div
-                key={message.id}
+                key={message._id}
                 className={cn(
                   "flex flex-col max-w-3xl mx-auto",
                   message.role === "user" ? "items-end" : "items-start",
                 )}
               >
-                {message.role === "user" && (
-                  <div className="bg-primary text-primary-foreground rounded-lg px-4 py-2">
-                    <p>{message.content}</p>
+                <div
+                  className={cn(
+                    "rounded-lg px-4 py-2",
+                    message.role === "user"
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-100 text-gray-800",
+                  )}
+                >
+                  <div className="whitespace-pre-wrap">{message.content}</div>
+                  {renderMessageFiles(message.files)}
+                  <div
+                    className={cn(
+                      "text-xs mt-1",
+                      message.role === "user"
+                        ? "text-blue-100"
+                        : "text-gray-500",
+                    )}
+                  >
+                    {formatTime(message._creationTime)}
                   </div>
-                )}
-                {message.role === "assistant" && (
-                  <div className="bg-muted rounded-lg px-4 py-2">
-                    <p className="whitespace-pre-wrap">{message.content}</p>
-                  </div>
-                )}
-                <span className="text-xs text-muted-foreground mt-1">
-                  {message.timestamp.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
+                </div>
               </div>
             ))}
             <div ref={messagesEndRef} />
@@ -201,12 +428,37 @@ The --force flag is a much more aggressive and generally less recommended approa
         )}
       </div>
 
-      <div className="p-4">
+      <div
+        className={cn(
+          "fixed bottom-0 p-4 bg-white",
+          isMobile
+            ? "left-0 right-0"
+            : state === "expanded"
+              ? "left-[var(--sidebar-width)] right-0"
+              : "left-0 right-0",
+        )}
+      >
         <div className="relative">
           <div className="rounded-lg border bg-background">
+            {/* Uploaded Files Preview */}
+            {uploadedFiles.length > 0 && (
+              <div className="p-3 space-y-2 border-b">
+                <div className="text-sm text-gray-600">Attached files:</div>
+                <div className="space-y-1">
+                  {uploadedFiles.map((file, index) =>
+                    renderFilePreview(file, index),
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col">
               <Textarea
-                placeholder="Type your message here..."
+                placeholder={
+                  isNewChat
+                    ? "Start your conversation..."
+                    : "Type your message here..."
+                }
                 className="min-h-24 resize-none border-0 p-3 focus-visible:ring-0 shadow-none"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -226,7 +478,7 @@ The --force flag is a much more aggressive and generally less recommended approa
                     className="text-xs"
                   >
                     <Sparkles className="h-3.5 w-3.5 mr-1" />
-                    Gemini 2.5 Flash
+                    {AI_MODELS[0].name}
                   </Button>
                   <Button
                     type="button"
@@ -237,19 +489,37 @@ The --force flag is a much more aggressive and generally less recommended approa
                     <Search className="h-4 w-4" />
                     <span className="ml-1">Search</span>
                   </Button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={(e) =>
+                      e.target.files && handleFileUpload(e.target.files)
+                    }
+                    multiple
+                    className="hidden"
+                    accept="image/*,.pdf,.doc,.docx,.txt"
+                  />
                   <Button
                     type="button"
                     size="sm"
                     variant="ghost"
                     className="px-2"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
                   >
-                    <Paperclip className="h-4 w-4" />
+                    {isUploading ? (
+                      <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
+                    ) : (
+                      <Paperclip className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
                 <Button
                   onClick={handleSubmit}
                   size="sm"
-                  disabled={!input.trim()}
+                  disabled={
+                    (!input.trim() && uploadedFiles.length === 0) || isCreating
+                  }
                 >
                   <ArrowUp className="h-4 w-4" />
                   <span className="sr-only">Send</span>

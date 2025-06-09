@@ -2,6 +2,7 @@
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { ChatInterface } from "@/components/chat-interface";
+import { ChatApp } from "@/components/ChatApp";
 import {
   SidebarInset,
   SidebarProvider,
@@ -16,10 +17,7 @@ export default function Page() {
         <SidebarTrigger className="bg-sidebar hover:bg-neutral-300 cursor-pointer" />
       </div>
 
-      <AppSidebar />
-      <SidebarInset>
-        <ChatInterface />
-      </SidebarInset>
+      <ChatApp />
     </SidebarProvider>
   );
 }

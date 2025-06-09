@@ -8,6 +8,7 @@ import {
   LogOut,
   Sparkles,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -33,6 +34,7 @@ export function NavUser() {
   const { isMobile } = useSidebar();
   const { signOut } = useAuthActions();
   const user = useQuery(api.user.currentUser);
+  const router = useRouter();
 
   if (!user) return null;
 
@@ -93,7 +95,7 @@ export function NavUser() {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push("/settings")}>
                 <BadgeCheck />
                 Account
               </DropdownMenuItem>
