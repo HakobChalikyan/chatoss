@@ -1,13 +1,6 @@
 "use client";
-
-import { AppSidebar } from "@/components/app-sidebar";
-import { ChatInterface } from "@/components/chat-interface";
 import { ChatApp } from "@/components/ChatApp";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 export default function Page() {
   return (

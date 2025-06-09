@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useSidebar } from "@/components/ui/sidebar";
+import { Markdown } from "./Markdown";
 
 interface Message {
   _id: Id<"messages">;
@@ -45,6 +46,87 @@ const AI_MODELS = [
     description: "Free testing model",
   },
 ];
+
+// const CodeBlock = ({ content }: { content: string }) => {
+//   // Extract language from the first line if it exists
+//   const lines = content.split("\n");
+//   let language = "";
+//   let code = content;
+
+//   if (lines[0].startsWith("```")) {
+//     language = lines[0].slice(3).trim();
+//     code = lines.slice(1, -1).join("\n");
+//   }
+
+//   return (
+//     <div className="relative group">
+//       <SyntaxHighlighter
+//         language={language || "text"}
+//         style={vscDarkPlus}
+//         customStyle={{
+//           margin: 0,
+//           borderRadius: "0.5rem",
+//           padding: "1rem",
+//         }}
+//       >
+//         {code}
+//       </SyntaxHighlighter>
+//       {language && (
+//         <div className="absolute top-2 right-2 text-xs text-gray-400">
+//           {language}
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// const MessageContent = ({ content }: { content: string }) => {
+//   const customSyntaxHighlighterStyle = {
+//     ...vscDarkPlus,
+//     'pre[class*=\"language-\"]': {
+//       ...(vscDarkPlus['pre[class*="language-"]'] || {}),
+//       margin: 0,
+//       borderRadius: "0.5rem",
+//       padding: "1rem",
+//     },
+//     'code[class*=\"language-\"]': {
+//       ...(vscDarkPlus['code[class*="language-"]'] || {}),
+//       backgroundColor: "transparent",
+//     },
+//   };
+
+//   return (
+//     <div className="prose dark:prose-invert max-w-none">
+//       <ReactMarkdown
+//         remarkPlugins={[remarkGfm]}
+//         components={{
+//           code({ inline, className, children, ...props }: CodeProps) {
+//             const match = /language-(\w+)/.exec(className || "");
+//             if (inline) {
+//               return (
+//                 <code className={className} {...props}>
+//                   {children}
+//                 </code>
+//               );
+//             }
+//             return (
+//               <SyntaxHighlighter
+//                 style={customSyntaxHighlighterStyle}
+//                 language={match?.[1] || "text"}
+//                 PreTag="div"
+//                 {...props}
+//               >
+//                 {String(children).replace(/\n$/, "")}
+//               </SyntaxHighlighter>
+//             );
+//           },
+//         }}
+//       >
+//         {content}
+//       </ReactMarkdown>
+//     </div>
+//   );
+// };
 
 export function ChatInterface({
   conversationId = "default",
@@ -430,7 +512,8 @@ export function ChatInterface({
                   )}
                 >
                   <div className="whitespace-pre-wrap">
-                    {message.content}
+                    {/* <MessageContent content={message.content} /> */}
+                    <Markdown>{message.content}</Markdown>
                     {message.isStreaming && message.content && (
                       <span className="inline-block w-2 h-5 bg-current ml-1 animate-pulse"></span>
                     )}
