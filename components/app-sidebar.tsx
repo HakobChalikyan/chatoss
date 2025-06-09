@@ -3,6 +3,7 @@ import { MessageSquare, Plus, Search } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
@@ -16,6 +17,7 @@ import { Button } from "./ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Label } from "./ui/label";
+import { NavUser } from "./nav-user";
 
 // This is sample data.
 const conversations = [
@@ -178,6 +180,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           )}
         </SidebarMenu>
       </SidebarContent>
+      <SidebarFooter>
+        <NavUser />
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );
