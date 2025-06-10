@@ -2,11 +2,12 @@
 
 import { ChatApp } from "@/components/ChatApp";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Id } from "@/convex/_generated/dataModel";
 import { useParams } from "next/navigation";
 
 export default function ChatPage() {
   const params = useParams();
-  const chatId = params?.chatId as string;
+  const chatId = params?.chatId as Id<"chats">;
 
   return (
     <SidebarProvider>
