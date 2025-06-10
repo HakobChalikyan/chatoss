@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useSidebar } from "@/components/ui/sidebar";
-import { Markdown } from "./Markdown";
+import { Markdown } from "./markdown";
 
 interface Message {
   _id: Id<"messages">;

@@ -1,14 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { ChatInterface } from "./chat-interface";
 import { SidebarInset } from "./ui/sidebar";
 import { AppSidebar } from "./app-sidebar";
+import { useRouter } from "next/navigation";
 
-export function ChatApp() {
+interface ChatAppProps {
+  initialChatId?: string;
+}
+
+export function ChatApp({ initialChatId }: ChatAppProps) {
+  const router = useRouter();
   const [selectedChatId, setSelectedChatId] = useState<Id<"chats"> | null>(
-    null,
+    (initialChatId as Id<"chats">) || null,
   );
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -17,6 +23,15 @@ export function ChatApp() {
     api.chats.getChat,
     selectedChatId ? { chatId: selectedChatId } : "skip",
   );
+
+  // Update URL when chat is selected
+  useEffect(() => {
+    if (selectedChatId) {
+      router.push(`/chat/${selectedChatId}`);
+    } else {
+      router.push("/chat");
+    }
+  }, [selectedChatId, router]);
 
   const handleNewChat = (chatId: Id<"chats">) => {
     setSelectedChatId(chatId);
