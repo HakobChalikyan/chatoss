@@ -9,6 +9,7 @@ import {
   ArrowUp,
   Search,
   Paperclip,
+  Check,
 } from "lucide-react";
 import { useMutation, useQuery } from "convex/react";
 import { toast } from "sonner";
@@ -21,6 +22,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Markdown } from "./markdown";
 import { PreviewAttachment } from "./preview-attachment";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Message {
   _id: Id<"messages">;
@@ -144,6 +151,7 @@ export function ChatInterface({
   onChatCreated,
 }: ChatInterfaceProps) {
   const [input, setInput] = React.useState("");
+  const [selectedModel, setSelectedModel] = React.useState(AI_MODELS[0]);
   const [uploadedFiles, setUploadedFiles] = React.useState<
     Array<{
       file: File;
@@ -225,7 +233,7 @@ export function ChatInterface({
         // First create the chat
         const chatId = await createChat({
           title: input.trim().slice(0, 50) + (input.length > 50 ? "..." : ""),
-          model: AI_MODELS[0].id,
+          model: selectedModel.id,
           initialMessage: input.trim(),
         });
 
@@ -551,15 +559,33 @@ export function ChatInterface({
               />
               <div className="flex items-center justify-between p-3 pt-0">
                 <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="text-xs"
-                  >
-                    <Sparkles className="h-3.5 w-3.5 mr-1" />
-                    {AI_MODELS[0].name}
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="text-xs"
+                      >
+                        <Sparkles className="h-3.5 w-3.5 mr-1" />
+                        {selectedModel.name}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-[200px]">
+                      {AI_MODELS.map((model) => (
+                        <DropdownMenuItem
+                          key={model.id}
+                          onClick={() => setSelectedModel(model)}
+                          className="flex items-center justify-between"
+                        >
+                          <span>{model.name}</span>
+                          {selectedModel.id === model.id && (
+                            <Check className="h-4 w-4" />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <Button
                     type="button"
                     size="sm"
