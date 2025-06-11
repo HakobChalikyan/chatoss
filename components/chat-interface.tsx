@@ -35,7 +35,7 @@ interface Message {
 }
 
 interface ChatInterfaceProps {
-  conversationId?: Id<"chats"> | "default";
+  conversationId?: Id<"chats"> | undefined;
   onChatCreated?: (chatId: Id<"chats">) => void;
 }
 
@@ -129,7 +129,7 @@ const AI_MODELS = [
 // };
 
 export function ChatInterface({
-  conversationId = "default",
+  conversationId,
   onChatCreated,
 }: ChatInterfaceProps) {
   const [input, setInput] = React.useState("");
@@ -153,19 +153,24 @@ export function ChatInterface({
   const saveFileToChat = useMutation(api.chats.saveFileToChat);
   const chat = useQuery(
     api.chats.getChat,
-    conversationId !== "default"
+    conversationId !== undefined
       ? { chatId: conversationId as Id<"chats"> }
       : "skip",
   );
 
-  // Scroll to bottom when messages change
+  // Scroll to bottom when messages change or when switching chats
   React.useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chat?.messages]);
+    if (chat?.messages) {
+      // Use requestAnimationFrame to ensure the DOM has updated
+      requestAnimationFrame(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+      });
+    }
+  }, [chat?.messages, conversationId]);
 
   // Reset state when conversation changes
   React.useEffect(() => {
-    if (conversationId === "default") {
+    if (conversationId === undefined) {
       setIsNewChat(true);
       setUploadedFiles([]);
     } else {
@@ -200,7 +205,7 @@ export function ChatInterface({
 
         const { storageId } = await result.json();
 
-        if (conversationId !== "default") {
+        if (conversationId !== undefined) {
           await saveFileToChat({
             chatId: conversationId as Id<"chats">,
             storageId,
@@ -409,18 +414,7 @@ export function ChatInterface({
 
   return (
     <div className="flex flex-col h-full">
-      {!isNewChat && chat && (
-        <div className="p-4 border-b border-gray-200 bg-white">
-          <div>
-            <h1 className="text-lg font-semibold text-gray-800">
-              {chat.title}
-            </h1>
-            <p className="text-sm text-gray-500">{chat.model}</p>
-          </div>
-        </div>
-      )}
-
-      <div className="flex-1 overflow-y-auto p-4 pb-[200px]">
+      <div className="flex-1 overflow-y-auto p-10 pb-[150px]">
         {isNewChat ? (
           <div className="flex flex-col items-center justify-center h-full">
             <h1 className="text-3xl font-bold mb-8">
@@ -566,11 +560,7 @@ export function ChatInterface({
 
             <div className="flex flex-col">
               <Textarea
-                placeholder={
-                  isNewChat
-                    ? "Start your conversation..."
-                    : "Type your message here..."
-                }
+                placeholder="Type your message here..."
                 className="min-h-24 resize-none border-0 p-3 focus-visible:ring-0 shadow-none"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}

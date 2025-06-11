@@ -133,23 +133,15 @@ export function AppSidebar({
                   ${
                     selectedChatId === chat._id
                       ? "bg-blue-50 border border-blue-200"
-                      : "hover:bg-gray-50"
+                      : "hover:bg-gray-50 border border-transparent"
                   }
                 `}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-gray-900 truncate">
+                        <h3 className="font-medium text-sm text-gray-900 truncate">
                           {chat.title}
                         </h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">
-                            {chat.model}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {formatTime(chat.lastMessageAt)}
-                          </span>
-                        </div>
                       </div>
 
                       <button

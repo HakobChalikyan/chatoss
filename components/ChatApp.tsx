@@ -18,17 +18,12 @@ export function ChatApp({ initialChatId }: ChatAppProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const chats = useQuery(api.chats.getUserChats, { searchQuery }) || [];
-  const selectedChat = useQuery(
-    api.chats.getChat,
-    // The query will be skipped if initialChatId is undefined
-    initialChatId ? { chatId: initialChatId } : "skip",
-  );
 
   const handleSelectChat = (chatId: Id<"chats"> | null) => {
     if (chatId) {
       router.push(`/chat/${chatId}`);
     } else {
-      router.push("/chat");
+      router.push("/");
     }
   };
 
@@ -42,7 +37,7 @@ export function ChatApp({ initialChatId }: ChatAppProps) {
         chats={chats}
         selectedChatId={initialChatId || null}
         onSelectChat={handleSelectChat}
-        onNewChat={() => handleSelectChat(null)} // Or a dedicated function to navigate to '/chat'
+        onNewChat={() => handleSelectChat(null)}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />
@@ -51,7 +46,7 @@ export function ChatApp({ initialChatId }: ChatAppProps) {
       <SidebarInset>
         <ChatInterface
           // Pass the chatId directly from the URL props
-          conversationId={initialChatId || "default"}
+          conversationId={initialChatId}
           onChatCreated={handleNewChat}
         />
       </SidebarInset>
