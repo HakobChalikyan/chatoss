@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Markdown } from "./markdown";
+import { PreviewAttachment } from "./preview-attachment";
 
 interface Message {
   _id: Id<"messages">;
@@ -40,6 +41,16 @@ interface ChatInterfaceProps {
 }
 
 const AI_MODELS = [
+  {
+    id: "google/gemma-3-27b-it:free",
+    name: "Gemma 3 27b",
+    description: "Free model",
+  },
+  {
+    id: "google/gemini-2.0-flash-exp:free",
+    name: "Gemini 2.0 Flash",
+    description: "Free experimental model",
+  },
   {
     id: "qwen/qwq-32b:free",
     name: "Qwen qwq-32b",
@@ -136,7 +147,6 @@ export function ChatInterface({
   const [uploadedFiles, setUploadedFiles] = React.useState<
     Array<{
       file: File;
-      storageId: Id<"_storage">;
     }>
   >([]);
   const [isUploading, setIsUploading] = React.useState(false);
@@ -182,7 +192,7 @@ export function ChatInterface({
     if (files.length === 0) return;
 
     setIsUploading(true);
-    const newFiles: Array<{ file: File; storageId: Id<"_storage"> }> = [];
+    const newFiles: Array<{ file: File }> = [];
 
     try {
       for (const file of Array.from(files)) {
@@ -192,37 +202,14 @@ export function ChatInterface({
           continue;
         }
 
-        const uploadUrl = await generateUploadUrl();
-        const result = await fetch(uploadUrl, {
-          method: "POST",
-          headers: { "Content-Type": file.type },
-          body: file,
-        });
-
-        if (!result.ok) {
-          throw new Error(`Upload failed for ${file.name}`);
-        }
-
-        const { storageId } = await result.json();
-
-        if (conversationId !== undefined) {
-          await saveFileToChat({
-            chatId: conversationId as Id<"chats">,
-            storageId,
-            fileName: file.name,
-            fileType: file.type,
-            fileSize: file.size,
-          });
-        }
-
-        newFiles.push({ file, storageId });
+        newFiles.push({ file });
       }
 
       setUploadedFiles((prev) => [...prev, ...newFiles]);
-      toast.success(`${newFiles.length} file(s) uploaded`);
+      toast.success(`${newFiles.length} file(s) selected`);
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Failed to upload files");
+      toast.error("Failed to process files");
     } finally {
       setIsUploading(false);
     }
@@ -235,11 +222,48 @@ export function ChatInterface({
     if (isNewChat) {
       setIsCreating(true);
       try {
+        // First create the chat
         const chatId = await createChat({
           title: input.trim().slice(0, 50) + (input.length > 50 ? "..." : ""),
           model: AI_MODELS[0].id,
           initialMessage: input.trim(),
         });
+
+        // Then upload files and save them to the chat
+        if (uploadedFiles.length > 0) {
+          const fileIds: Id<"_storage">[] = [];
+          for (const { file } of uploadedFiles) {
+            const uploadUrl = await generateUploadUrl();
+            const result = await fetch(uploadUrl, {
+              method: "POST",
+              headers: { "Content-Type": file.type },
+              body: file,
+            });
+
+            if (!result.ok) {
+              throw new Error(`Upload failed for ${file.name}`);
+            }
+
+            const { storageId } = await result.json();
+            fileIds.push(storageId);
+
+            await saveFileToChat({
+              chatId,
+              storageId,
+              fileName: file.name,
+              fileType: file.type,
+              fileSize: file.size,
+            });
+          }
+
+          // Update the chat with file IDs
+          await sendMessage({
+            chatId,
+            content: input.trim() || "📎 Files attached",
+            fileIds,
+          });
+        }
+
         onChatCreated?.(chatId);
         toast.success("Chat created successfully");
         setIsNewChat(false);
@@ -251,7 +275,34 @@ export function ChatInterface({
     } else {
       try {
         const messageText = input.trim() || "📎 Files attached";
-        const fileIds = uploadedFiles.map((f) => f.storageId);
+        const fileIds: Id<"_storage">[] = [];
+
+        // Upload files and save them to the chat
+        if (uploadedFiles.length > 0) {
+          for (const { file } of uploadedFiles) {
+            const uploadUrl = await generateUploadUrl();
+            const result = await fetch(uploadUrl, {
+              method: "POST",
+              headers: { "Content-Type": file.type },
+              body: file,
+            });
+
+            if (!result.ok) {
+              throw new Error(`Upload failed for ${file.name}`);
+            }
+
+            const { storageId } = await result.json();
+            fileIds.push(storageId);
+
+            await saveFileToChat({
+              chatId: conversationId as Id<"chats">,
+              storageId,
+              fileName: file.name,
+              fileType: file.type,
+              fileSize: file.size,
+            });
+          }
+        }
 
         await sendMessage({
           chatId: conversationId as Id<"chats">,
@@ -278,62 +329,17 @@ export function ChatInterface({
     });
   };
 
-  const renderFilePreview = (
-    file: { file: File; storageId: Id<"_storage"> },
-    index: number,
-  ) => {
-    const isImage = file.file.type.startsWith("image/");
-
+  const renderFilePreview = (file: { file: File }, index: number) => {
     return (
-      <div
+      <PreviewAttachment
         key={index}
-        className="relative bg-gray-100 rounded-lg p-2 flex items-center gap-2"
-      >
-        {isImage ? (
-          <img
-            src={URL.createObjectURL(file.file)}
-            alt={file.file.name}
-            className="w-8 h-8 object-cover rounded"
-          />
-        ) : (
-          <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
-            <svg
-              className="w-4 h-4 text-blue-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-          </div>
-        )}
-        <span className="text-sm text-gray-700 truncate flex-1">
-          {file.file.name}
-        </span>
-        <button
-          onClick={() => removeUploadedFile(index)}
-          className="text-gray-400 hover:text-red-500 p-1"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-      </div>
+        attachment={{
+          url: URL.createObjectURL(file.file),
+          name: file.file.name,
+          contentType: file.file.type,
+        }}
+        isUploading={false}
+      />
     );
   };
 
@@ -342,52 +348,17 @@ export function ChatInterface({
 
     return (
       <div className="mt-2 space-y-2">
-        {files.map((file, index) => {
-          const isImage = file.metadata?.contentType?.startsWith("image/");
-
-          return (
-            <div key={index} className="bg-gray-50 rounded-lg p-2">
-              {isImage && file.url ? (
-                <img
-                  src={file.url}
-                  alt="Uploaded image"
-                  className="max-w-xs max-h-48 object-contain rounded"
-                />
-              ) : (
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
-                    <svg
-                      className="w-4 h-4 text-blue-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                  </div>
-                  <span className="text-sm text-gray-700">
-                    {file.metadata?.contentType || "File"}
-                  </span>
-                  {file.url && (
-                    <a
-                      href={file.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                    >
-                      Download
-                    </a>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {files.map((file, index) => (
+          <PreviewAttachment
+            key={index}
+            attachment={{
+              url: file.url || "",
+              name: file.metadata?.fileName || "File",
+              contentType: file.metadata?.contentType || "",
+            }}
+            isUploading={false}
+          />
+        ))}
       </div>
     );
   };
@@ -506,7 +477,6 @@ export function ChatInterface({
                   )}
                 >
                   <div className="whitespace-pre-wrap">
-                    {/* <MessageContent content={message.content} /> */}
                     <Markdown>{message.content}</Markdown>
                     {message.isStreaming && message.content && (
                       <span className="inline-block w-2 h-5 bg-current ml-1 animate-pulse"></span>
@@ -548,12 +518,20 @@ export function ChatInterface({
           <div className="rounded-lg border bg-background">
             {/* Uploaded Files Preview */}
             {uploadedFiles.length > 0 && (
-              <div className="p-3 space-y-2 border-b">
-                <div className="text-sm text-gray-600">Attached files:</div>
-                <div className="space-y-1">
-                  {uploadedFiles.map((file, index) =>
-                    renderFilePreview(file, index),
-                  )}
+              <div className="p-3 w-full">
+                <div className="flex flex-wrap gap-4">
+                  {uploadedFiles.map((file, index) => (
+                    <PreviewAttachment
+                      key={index}
+                      attachment={{
+                        url: URL.createObjectURL(file.file),
+                        name: file.file.name,
+                        contentType: file.file.type,
+                      }}
+                      isUploading={false}
+                      onDelete={() => removeUploadedFile(index)}
+                    />
+                  ))}
                 </div>
               </div>
             )}

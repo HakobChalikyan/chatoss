@@ -132,7 +132,9 @@ export const generateAIResponseStreaming = internalAction({
 
       const response = await openai.chat.completions.create({
         // model: args.model === "gpt-4o-mini" ? "gpt-4o-mini" : "gpt-4.1-nano",
-        model: "qwen/qwq-32b:free",
+        // model: "qwen/qwq-32b:free",
+        // model: "google/gemini-2.0-flash-exp:free",
+        model: "google/gemma-3-27b-it:free",
         messages: openaiMessages,
         max_tokens: 1000,
         stream: true,
