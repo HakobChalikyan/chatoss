@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ArrowUp, Paperclip, Search } from "lucide-react";
+import { ArrowUp, Paperclip, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { PreviewAttachment } from "../preview-attachment";
@@ -9,11 +9,13 @@ interface ChatInputProps {
   input: string;
   onInputChange: (value: string) => void;
   onSubmit: (e: React.FormEvent | React.KeyboardEvent) => void;
+  onCancel?: () => void;
   uploadedFiles: Array<{ file: File }>;
   onFileUpload: (files: FileList) => void;
   onRemoveFile: (index: number) => void;
   isUploading: boolean;
   isCreating: boolean;
+  isStreaming?: boolean;
   selectedModel: AIModel;
   onModelSelect: (model: AIModel) => void;
 }
@@ -22,11 +24,13 @@ export function ChatInput({
   input,
   onInputChange,
   onSubmit,
+  onCancel,
   uploadedFiles,
   onFileUpload,
   onRemoveFile,
   isUploading,
   isCreating,
+  isStreaming,
   selectedModel,
   onModelSelect,
 }: ChatInputProps) {
@@ -97,7 +101,7 @@ export function ChatInput({
                 variant="ghost"
                 className="px-2"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
+                disabled={isUploading || isStreaming}
               >
                 {isUploading ? (
                   <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
@@ -106,16 +110,23 @@ export function ChatInput({
                 )}
               </Button>
             </div>
-            <Button
-              onClick={onSubmit}
-              size="sm"
-              disabled={
-                (!input.trim() && uploadedFiles.length === 0) || isCreating
-              }
-            >
-              <ArrowUp className="h-4 w-4" />
-              <span className="sr-only">Send</span>
-            </Button>
+            {isStreaming ? (
+              <Button onClick={onCancel} size="sm" variant="destructive">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Cancel</span>
+              </Button>
+            ) : (
+              <Button
+                onClick={onSubmit}
+                size="sm"
+                disabled={
+                  (!input.trim() && uploadedFiles.length === 0) || isCreating
+                }
+              >
+                <ArrowUp className="h-4 w-4" />
+                <span className="sr-only">Send</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>

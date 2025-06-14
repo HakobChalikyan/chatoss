@@ -66,6 +66,8 @@ export function Message({ message }: MessageProps) {
     );
   };
 
+  const isCancelled = message.content.endsWith("*Response was cancelled*");
+
   return (
     <div
       className={cn(
@@ -82,9 +84,19 @@ export function Message({ message }: MessageProps) {
         )}
       >
         <div className="whitespace-pre-wrap">
-          <Markdown>{message.content}</Markdown>
+          <Markdown>
+            {isCancelled
+              ? message.content.replace("*Response was cancelled*", "")
+              : message.content}
+          </Markdown>
         </div>
         {renderMessageFiles(message.files)}
+
+        {isCancelled && (
+          <div className="text-xs mt-2 text-black bg-red-300 p-4 rounded-xl  italic">
+            Response stopped by user
+          </div>
+        )}
         <div
           className={cn(
             "text-xs mt-1",

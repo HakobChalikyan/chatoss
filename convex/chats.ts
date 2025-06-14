@@ -105,53 +105,111 @@ export const generateAIResponseStreaming = internalAction({
       content: msg.content,
     }));
 
+    let fullContent = "";
+
+    // Create a placeholder message for streaming
+    const messageId = await ctx.runMutation(
+      internal.chats.createStreamingMessage,
+      {
+        chatId: args.chatId,
+      },
+    );
+
     try {
       // Get the user's API key
       const apiKeyData = await ctx.runQuery(api.apiKeys.getApiKey, {
         userId: args.userId,
-        // model: args.model,
       });
 
       if (!apiKeyData?.apiKey) {
         throw new Error("No API key found for this model");
       }
 
-      // Initialize OpenAI client with user's API key
-      const openai = new OpenAI({
-        baseURL: "https://openrouter.ai/api/v1",
-        apiKey: apiKeyData.apiKey,
+      const controller = new AbortController();
+
+      // Store the controller in a way that can be accessed by the cancel mutation
+      await ctx.runMutation(internal.chats.storeStreamController, {
+        chatId: args.chatId,
+        controllerId: messageId,
       });
 
-      // Create a placeholder message for streaming
-      const messageId = await ctx.runMutation(
-        internal.chats.createStreamingMessage,
+      // Check for cancellation before making the request
+      const isCancelled = await ctx.runQuery(
+        internal.chats.checkStreamCancelled,
         {
           chatId: args.chatId,
         },
       );
 
-      const response = await openai.chat.completions.create({
-        // model: args.model === "gpt-4o-mini" ? "gpt-4o-mini" : "gpt-4.1-nano",
-        // model: "qwen/qwq-32b:free",
-        // model: "google/gemini-2.0-flash-exp:free",
-        model: "google/gemma-3-27b-it:free",
-        messages: openaiMessages,
-        stream: true,
-      });
+      if (isCancelled) {
+        throw new Error("Stream cancelled");
+      }
 
-      let fullContent = "";
+      const response = await fetch(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKeyData.apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemma-3-27b-it:free",
+            messages: openaiMessages,
+            stream: true,
+          }),
+          signal: controller.signal,
+        },
+      );
 
-      for await (const chunk of response) {
-        const content = chunk.choices[0]?.delta?.content || "";
-        if (content) {
-          fullContent += content;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-          // Update the streaming message with accumulated content
-          await ctx.runMutation(internal.chats.updateStreamingMessage, {
-            messageId,
-            content: fullContent,
-            isComplete: false,
-          });
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("No reader available");
+      }
+
+      while (true) {
+        // Check for cancellation before reading the next chunk
+        const isCancelled = await ctx.runQuery(
+          internal.chats.checkStreamCancelled,
+          {
+            chatId: args.chatId,
+          },
+        );
+
+        if (isCancelled) {
+          throw new Error("Stream cancelled");
+        }
+
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = new TextDecoder().decode(value);
+        const lines = chunk.split("\n").filter((line) => line.trim() !== "");
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const data = line.slice(6);
+            if (data === "[DONE]") continue;
+
+            try {
+              const parsed = JSON.parse(data);
+              const content = parsed.choices[0]?.delta?.content || "";
+              if (content) {
+                fullContent += content;
+                await ctx.runMutation(internal.chats.updateStreamingMessage, {
+                  messageId,
+                  content: fullContent,
+                  isComplete: false,
+                });
+              }
+            } catch (e) {
+              console.error("Error parsing chunk:", e);
+            }
+          }
         }
       }
 
@@ -161,13 +219,36 @@ export const generateAIResponseStreaming = internalAction({
         content: fullContent,
         isComplete: true,
       });
-    } catch (error) {
-      console.error("AI response error:", error);
-      await ctx.runMutation(internal.chats.addAIMessage, {
+
+      // Clean up the controller
+      await ctx.runMutation(internal.chats.removeStreamController, {
         chatId: args.chatId,
-        content:
-          "I apologize, but I encountered an error generating a response. Please try again.",
       });
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        console.log("Stream cancelled");
+        await ctx.runMutation(internal.chats.updateStreamingMessage, {
+          messageId,
+          content: fullContent + "\n\n*Response was cancelled*",
+          isComplete: true,
+        });
+      } else if (
+        error instanceof Error &&
+        error.message === "Stream cancelled"
+      ) {
+        await ctx.runMutation(internal.chats.updateStreamingMessage, {
+          messageId,
+          content: fullContent + "\n\n*Response was cancelled*",
+          isComplete: true,
+        });
+      } else {
+        console.error("AI response error:", error);
+        await ctx.runMutation(internal.chats.addAIMessage, {
+          chatId: args.chatId,
+          content:
+            "I apologize, but I encountered an error generating a response. Please try again.",
+        });
+      }
     }
   },
 });
@@ -372,5 +453,74 @@ export const saveFileToChat = mutation({
     });
 
     return args.storageId;
+  },
+});
+
+export const storeStreamController = internalMutation({
+  args: {
+    chatId: v.id("chats"),
+    controllerId: v.id("messages"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.insert("streamControllers", {
+      chatId: args.chatId,
+      messageId: args.controllerId,
+      createdAt: Date.now(),
+    });
+  },
+});
+
+export const removeStreamController = internalMutation({
+  args: {
+    chatId: v.id("chats"),
+  },
+  handler: async (ctx, args) => {
+    const controllers = await ctx.db
+      .query("streamControllers")
+      .withIndex("by_chat", (q) => q.eq("chatId", args.chatId))
+      .collect();
+
+    for (const controller of controllers) {
+      await ctx.db.delete(controller._id);
+    }
+  },
+});
+
+export const cancelStream = mutation({
+  args: {
+    chatId: v.id("chats"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const chat = await ctx.db.get(args.chatId);
+    if (!chat || chat.userId !== userId) {
+      throw new Error("Chat not found or unauthorized");
+    }
+
+    const controllers = await ctx.db
+      .query("streamControllers")
+      .withIndex("by_chat", (q) => q.eq("chatId", args.chatId))
+      .collect();
+
+    if (controllers.length > 0) {
+      // The actual cancellation will be handled by the AbortController in the streaming action
+      await ctx.db.delete(controllers[0]._id);
+    }
+  },
+});
+
+export const checkStreamCancelled = internalQuery({
+  args: {
+    chatId: v.id("chats"),
+  },
+  handler: async (ctx, args) => {
+    const controllers = await ctx.db
+      .query("streamControllers")
+      .withIndex("by_chat", (q) => q.eq("chatId", args.chatId))
+      .collect();
+
+    return controllers.length === 0;
   },
 });

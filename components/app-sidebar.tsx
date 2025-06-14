@@ -60,7 +60,6 @@ export function AppSidebar({
       if (selectedChatId === chatId) {
         onSelectChat(chats.find((c) => c._id !== chatId)?._id || (null as any));
       }
-      toast.success("Chat deleted");
     } catch (error) {
       toast.error("Failed to delete chat");
     } finally {

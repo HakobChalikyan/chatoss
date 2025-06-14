@@ -66,4 +66,12 @@ export default defineSchema({
     ),
     userId: v.id("users"),
   }),
+
+  streamControllers: defineTable({
+    chatId: v.id("chats"),
+    messageId: v.id("messages"),
+    createdAt: v.number(),
+  })
+    .index("by_chat", ["chatId"])
+    .index("by_creation", ["createdAt"]),
 });

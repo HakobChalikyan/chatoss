@@ -53,12 +53,19 @@ export function ChatInterface({
   const sendMessage = useMutation(api.chats.sendMessage);
   const generateUploadUrl = useMutation(api.chats.generateUploadUrl);
   const saveFileToChat = useMutation(api.chats.saveFileToChat);
+  const cancelStream = useMutation(api.chats.cancelStream);
   const chat = useQuery(
     api.chats.getChat,
     conversationId !== undefined
       ? { chatId: conversationId as Id<"chats"> }
       : "skip",
   );
+
+  // Check if there's a streaming message
+  const isStreaming = React.useMemo(() => {
+    if (!chat?.messages) return false;
+    return chat.messages.some((message) => message.isStreaming);
+  }, [chat?.messages]);
 
   // Reset state when conversation changes
   React.useEffect(() => {
@@ -88,7 +95,6 @@ export function ChatInterface({
       }
 
       setUploadedFiles((prev) => [...prev, ...newFiles]);
-      toast.success(`${newFiles.length} file(s) selected`);
     } catch (error) {
       console.error("Upload error:", error);
       toast.error("Failed to process files");
@@ -147,7 +153,6 @@ export function ChatInterface({
         }
 
         onChatCreated?.(chatId);
-        toast.success("Chat created successfully");
         setIsNewChat(false);
       } catch (error) {
         toast.error("Failed to create chat");
@@ -202,6 +207,12 @@ export function ChatInterface({
 
   const removeUploadedFile = (index: number) => {
     setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleCancel = async () => {
+    if (conversationId) {
+      await cancelStream({ chatId: conversationId });
+    }
   };
 
   return (
@@ -312,11 +323,13 @@ export function ChatInterface({
             input={input}
             onInputChange={setInput}
             onSubmit={handleSubmit}
+            onCancel={handleCancel}
             uploadedFiles={uploadedFiles}
             onFileUpload={handleFileUpload}
             onRemoveFile={removeUploadedFile}
             isUploading={isUploading}
             isCreating={isCreating}
+            isStreaming={isStreaming}
             selectedModel={selectedModel}
             onModelSelect={setSelectedModel}
           />
