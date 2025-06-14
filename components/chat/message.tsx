@@ -83,9 +83,6 @@ export function Message({ message }: MessageProps) {
       >
         <div className="whitespace-pre-wrap">
           <Markdown>{message.content}</Markdown>
-          {message.isStreaming && message.content && (
-            <span className="inline-block w-2 h-5 bg-current ml-1 animate-pulse"></span>
-          )}
         </div>
         {renderMessageFiles(message.files)}
         <div
@@ -94,7 +91,9 @@ export function Message({ message }: MessageProps) {
             message.role === "user" ? "text-blue-100" : "text-gray-500",
           )}
         >
-          <span>{formatTime(message._creationTime)}</span>
+          {!message.isStreaming && (
+            <span>{formatTime(message._creationTime)}</span>
+          )}
           {message.isStreaming && !message.content && <StreamingIndicator />}
         </div>
       </div>

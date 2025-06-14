@@ -17,6 +17,7 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_user", ["userId"]),
+
   chats: defineTable({
     userId: v.id("users"),
     title: v.string(),
@@ -38,6 +39,14 @@ export default defineSchema({
     isStreaming: v.optional(v.boolean()),
   }).index("by_chat", ["chatId"]),
 
+  messages_v2: defineTable({
+    chatId: v.id("chats"),
+    role: v.union(v.literal("user"), v.literal("assistant")),
+    parts: v.any(),
+    fileIds: v.optional(v.array(v.id("_storage"))),
+    isStreaming: v.optional(v.boolean()),
+  }).index("by_chat", ["chatId"]),
+
   chatFiles: defineTable({
     chatId: v.id("chats"),
     storageId: v.id("_storage"),
@@ -45,4 +54,16 @@ export default defineSchema({
     fileType: v.string(),
     fileSize: v.number(),
   }).index("by_chat", ["chatId"]),
+
+  documents: defineTable({
+    title: v.string(),
+    content: v.optional(v.string()),
+    kind: v.union(
+      v.literal("text"),
+      v.literal("code"),
+      v.literal("image"),
+      v.literal("sheet"),
+    ),
+    userId: v.id("users"),
+  }),
 });
