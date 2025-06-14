@@ -286,7 +286,7 @@ export function ChatInterface({
 
       <div
         className={cn(
-          "fixed bottom-4 p-4 bg-transparent",
+          "fixed bottom-0 bg-transparent",
           isMobile
             ? "left-0 right-0"
             : state === "expanded"
@@ -307,18 +307,20 @@ export function ChatInterface({
             </Button>
           </div>
         )}
-        <ChatInput
-          input={input}
-          onInputChange={setInput}
-          onSubmit={handleSubmit}
-          uploadedFiles={uploadedFiles}
-          onFileUpload={handleFileUpload}
-          onRemoveFile={removeUploadedFile}
-          isUploading={isUploading}
-          isCreating={isCreating}
-          selectedModel={selectedModel}
-          onModelSelect={setSelectedModel}
-        />
+        <div className="p-4 pt-0 bg-white">
+          <ChatInput
+            input={input}
+            onInputChange={setInput}
+            onSubmit={handleSubmit}
+            uploadedFiles={uploadedFiles}
+            onFileUpload={handleFileUpload}
+            onRemoveFile={removeUploadedFile}
+            isUploading={isUploading}
+            isCreating={isCreating}
+            selectedModel={selectedModel}
+            onModelSelect={setSelectedModel}
+          />
+        </div>
       </div>
     </div>
   );

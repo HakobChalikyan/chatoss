@@ -1,6 +1,5 @@
 import * as React from "react";
 import { ArrowUp, Paperclip, Search } from "lucide-react";
-import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { PreviewAttachment } from "../preview-attachment";
