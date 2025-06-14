@@ -1,0 +1,25 @@
+// Map of language names to their file extensions
+export const LANGUAGE_EXTENSIONS: Record<string, string> = {
+  javascript: "js",
+  typescript: "ts",
+  python: "py",
+  java: "java",
+  cpp: "cpp",
+  csharp: "cs",
+  ruby: "rb",
+  php: "php",
+  go: "go",
+  rust: "rs",
+  swift: "swift",
+  kotlin: "kt",
+  html: "html",
+  css: "css",
+  json: "json",
+  yaml: "yml",
+  markdown: "md",
+  shell: "sh",
+  bash: "sh",
+  sql: "sql",
+  xml: "xml",
+  // Add more mappings as needed
+};

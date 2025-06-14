@@ -2,6 +2,8 @@ import { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { Markdown } from "../markdown";
 import { PreviewAttachment } from "../preview-attachment";
+import { useState } from "react";
+import { Check, Copy } from "lucide-react";
 
 interface MessageProps {
   message: {
@@ -45,6 +47,26 @@ const formatTime = (timestamp: number) => {
   });
 };
 
+const CopyButton = ({ content }: { content: string }) => {
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = async () => {
+    await navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <button
+      onClick={copyToClipboard}
+      className="absolute top-2 right-2 p-1 rounded-md hover:bg-gray-200/50 transition-colors"
+      title="Copy message"
+    >
+      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+    </button>
+  );
+};
+
 export function Message({ message }: MessageProps) {
   const renderMessageFiles = (files: MessageProps["message"]["files"]) => {
     if (!files || files.length === 0) return null;
@@ -77,12 +99,13 @@ export function Message({ message }: MessageProps) {
     >
       <div
         className={cn(
-          "rounded-lg px-4 py-2",
+          "rounded-lg px-4 py-2 relative group",
           message.role === "user"
             ? "bg-blue-600 text-white"
             : "bg-gray-100 text-gray-800",
         )}
       >
+        <CopyButton content={message.content} />
         <div className="whitespace-pre-wrap">
           <Markdown>
             {isCancelled
