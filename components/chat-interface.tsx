@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Sparkles, Code, BookOpen, Compass } from "lucide-react";
+import { Sparkles, Code, BookOpen, Compass, ArrowDown } from "lucide-react";
 import { useMutation, useQuery } from "convex/react";
 import { toast } from "sonner";
 import { Id } from "@/convex/_generated/dataModel";
@@ -13,6 +13,7 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { Messages } from "./chat/messages";
 import { ChatInput } from "./chat/chat-input";
 import { AI_MODELS } from "./chat/ai-model-selector";
+import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
 
 interface Message {
   _id: Id<"messages">;
@@ -44,6 +45,7 @@ export function ChatInterface({
   const [isUploading, setIsUploading] = React.useState(false);
   const [isNewChat, setIsNewChat] = React.useState(true);
   const [isCreating, setIsCreating] = React.useState(false);
+  const { isAtBottom, scrollToBottom } = useScrollToBottom();
 
   const { isMobile, state } = useSidebar();
 
@@ -284,7 +286,7 @@ export function ChatInterface({
 
       <div
         className={cn(
-          "fixed bottom-0 p-4 bg-white",
+          "fixed bottom-4 p-4 bg-transparent",
           isMobile
             ? "left-0 right-0"
             : state === "expanded"
@@ -292,6 +294,19 @@ export function ChatInterface({
               : "left-0 right-0",
         )}
       >
+        {!isNewChat && !isAtBottom && (
+          <div className="flex justify-center mb-2">
+            <Button
+              data-testid="scroll-to-bottom-button"
+              className="rounded-full shadow-lg"
+              size="icon"
+              variant="outline"
+              onClick={() => scrollToBottom("smooth")}
+            >
+              <ArrowDown className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
         <ChatInput
           input={input}
           onInputChange={setInput}

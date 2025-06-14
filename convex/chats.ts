@@ -136,7 +136,6 @@ export const generateAIResponseStreaming = internalAction({
         // model: "google/gemini-2.0-flash-exp:free",
         model: "google/gemma-3-27b-it:free",
         messages: openaiMessages,
-        max_tokens: 1000,
         stream: true,
       });
 
