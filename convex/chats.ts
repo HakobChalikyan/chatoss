@@ -48,6 +48,75 @@ export const createChat = mutation({
   },
 });
 
+export const createBranchedChat = mutation({
+  args: {
+    parentChatId: v.id("chats"),
+    branchedFromMessageId: v.id("messages"),
+    editedContent: v.string(),
+    fileIds: v.optional(v.array(v.id("_storage"))),
+    model: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    // Fetch the parent chat to inherit its title or create a new one
+    const parentChat = await ctx.db.get(args.parentChatId);
+    if (!parentChat || parentChat.userId !== userId) {
+      throw new Error("Parent chat not found or unauthorized");
+    }
+
+    // Get all messages from the parent chat to copy as context
+    const parentMessages = await ctx.db
+      .query("messages")
+      .withIndex("by_chat", (q) => q.eq("chatId", args.parentChatId))
+      .collect();
+
+    // Create a new chat for the branch
+    const newChatId = await ctx.db.insert("chats", {
+      userId,
+      title: `Branch from: ${parentChat.title}`,
+      model: args.model, // Use the same model as the parent chat
+      lastMessageAt: Date.now(),
+      parentChatId: args.parentChatId,
+      branchedFromMessageId: args.branchedFromMessageId,
+    });
+
+    // Copy historical messages from the parent chat up to the branched message
+    for (const message of parentMessages) {
+      if (message._id === args.branchedFromMessageId) break; // Stop at the branched message
+      await ctx.db.insert("messages", {
+        chatId: newChatId,
+        role: message.role,
+        content: message.content,
+        fileIds: message.fileIds,
+        isStreaming: message.isStreaming || false, // Ensure isStreaming is boolean
+      });
+    }
+
+    // Add the edited message to the new branched chat
+    await ctx.db.insert("messages", {
+      chatId: newChatId,
+      role: "user",
+      content: args.editedContent,
+      fileIds: args.fileIds,
+    });
+
+    // Trigger AI response for the new message in the branched chat
+    await ctx.scheduler.runAfter(
+      0,
+      internal.chats.generateAIResponseStreaming,
+      {
+        userId,
+        chatId: newChatId,
+        model: args.model,
+      },
+    );
+
+    return newChatId;
+  },
+});
+
 export const sendMessage = mutation({
   args: {
     chatId: v.id("chats"),
@@ -373,9 +442,18 @@ export const getChat = query({
       }),
     );
 
+    // Fetch branched chats if this is a parent chat
+    const branchedChats = await ctx.db
+      .query("chats")
+      .withIndex("by_parent_chat_and_message", (q) =>
+        q.eq("parentChatId", args.chatId),
+      )
+      .collect();
+
     return {
       ...chat,
       messages: messagesWithFiles,
+      branchedChats: branchedChats, // Include branched chats in the result
     };
   },
 });

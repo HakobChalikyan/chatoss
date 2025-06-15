@@ -23,9 +23,15 @@ export default defineSchema({
     title: v.string(),
     model: v.string(),
     lastMessageAt: v.number(),
+    parentChatId: v.optional(v.id("chats")),
+    branchedFromMessageId: v.optional(v.id("messages")),
   })
     .index("by_user", ["userId"])
     .index("by_user_and_last_message", ["userId", "lastMessageAt"])
+    .index("by_parent_chat_and_message", [
+      "parentChatId",
+      "branchedFromMessageId",
+    ])
     .searchIndex("search_title", {
       searchField: "title",
       filterFields: ["userId"],

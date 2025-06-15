@@ -4,8 +4,9 @@ import { Markdown } from "../markdown";
 import { PreviewAttachment } from "../preview-attachment";
 import { MessageActions } from "./message-actions";
 import { useState } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { useRouter } from "next/navigation";
 
 interface MessageProps {
   message: {
@@ -21,6 +22,11 @@ interface MessageProps {
     }>;
   };
   chatId: Id<"chats">;
+  branchedChats?: Array<{
+    _id: Id<"chats">;
+    branchedFromMessageId?: Id<"messages">;
+    title: string;
+  }>;
 }
 
 const StreamingIndicator = () => (
@@ -50,10 +56,12 @@ const formatTime = (timestamp: number) => {
   });
 };
 
-export function Message({ message, chatId }: MessageProps) {
+export function Message({ message, chatId, branchedChats }: MessageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(message.content);
-  const sendMessage = useMutation(api.chats.sendMessage);
+  const createBranchedChat = useMutation(api.chats.createBranchedChat);
+  const currentChat = useQuery(api.chats.getChat, { chatId });
+  const router = useRouter();
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -63,14 +71,23 @@ export function Message({ message, chatId }: MessageProps) {
   const handleResubmit = async () => {
     if (editedContent.trim() === "") return;
 
-    await sendMessage({
-      chatId,
-      content: editedContent,
-      fileIds:
-        message.files && message.files.length > 0
-          ? message.files.map((f) => f.id)
-          : undefined,
-    });
+    if (message.role === "user") {
+      try {
+        const newChatId = await createBranchedChat({
+          parentChatId: chatId,
+          branchedFromMessageId: message._id,
+          editedContent,
+          fileIds:
+            message.files && message.files.length > 0
+              ? message.files.map((f) => f.id)
+              : undefined,
+          model: currentChat?.model || "default",
+        });
+        router.push(`/chat/${newChatId}`);
+      } catch (error) {
+        console.error("Error creating branched chat:", error);
+      }
+    }
 
     setIsEditing(false);
   };
@@ -159,6 +176,20 @@ export function Message({ message, chatId }: MessageProps) {
               </Markdown>
             </div>
             {renderMessageFiles(message.files)}
+
+            {branchedChats && branchedChats.length > 0 && (
+              <div className="flex flex-col gap-2 mt-2">
+                {branchedChats.map((branch) => (
+                  <a
+                    key={branch._id}
+                    href={`/chat/${branch._id}`}
+                    className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200"
+                  >
+                    {branch.title}
+                  </a>
+                ))}
+              </div>
+            )}
 
             {isCancelled && (
               <div className="text-xs mt-2 text-black bg-red-300 p-4 rounded-xl italic">
