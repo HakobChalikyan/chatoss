@@ -8,7 +8,6 @@ import {
 } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { api, internal } from "./_generated/api";
-import OpenAI from "openai";
 
 export const createChat = mutation({
   args: {
@@ -46,6 +45,95 @@ export const createChat = mutation({
     );
 
     return chatId;
+  },
+});
+
+export const createBranchedChat = mutation({
+  args: {
+    parentChatId: v.id("chats"),
+    branchedFromMessageId: v.id("messages"),
+    editedContent: v.string(),
+    fileIds: v.optional(v.array(v.id("_storage"))),
+    model: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    // Fetch the parent chat to inherit its title or create a new one
+    const parentChat = await ctx.db.get(args.parentChatId);
+    if (!parentChat || parentChat.userId !== userId) {
+      throw new Error("Parent chat not found or unauthorized");
+    }
+
+    // Get all messages from the parent chat to copy as context
+    const parentMessages = await ctx.db
+      .query("messages")
+      .withIndex("by_chat", (q) => q.eq("chatId", args.parentChatId))
+      .collect();
+
+    // Get the branched message to check its role
+    const branchedMessage = await ctx.db.get(args.branchedFromMessageId);
+    if (!branchedMessage) {
+      throw new Error("Branched message not found");
+    }
+
+    // Create a new chat for the branch
+    const newChatId = await ctx.db.insert("chats", {
+      userId,
+      title: `Branched: ${parentChat.title}`,
+      model: args.model,
+      lastMessageAt: Date.now(),
+      parentChatId: args.parentChatId,
+      branchedFromMessageId: args.branchedFromMessageId,
+    });
+
+    for (const message of parentMessages) {
+      if (
+        message._id === args.branchedFromMessageId &&
+        message.role === "user"
+      ) {
+        break;
+      }
+
+      await ctx.db.insert("messages", {
+        chatId: newChatId,
+        role: message.role,
+        content: message.content,
+        fileIds: message.fileIds,
+        isStreaming: message.isStreaming || false,
+      });
+
+      if (
+        message._id === args.branchedFromMessageId &&
+        message.role === "assistant"
+      ) {
+        break;
+      }
+    }
+
+    // Only add a new message if there's edited content
+    if (args.editedContent.trim()) {
+      await ctx.db.insert("messages", {
+        chatId: newChatId,
+        role: "user",
+        content: args.editedContent,
+        fileIds: args.fileIds,
+      });
+
+      // Trigger AI response for the new message in the branched chat
+      await ctx.scheduler.runAfter(
+        0,
+        internal.chats.generateAIResponseStreaming,
+        {
+          userId,
+          chatId: newChatId,
+          model: args.model,
+        },
+      );
+    }
+
+    return newChatId;
   },
 });
 
@@ -154,7 +242,7 @@ export const generateAIResponseStreaming = internalAction({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "google/gemma-3-27b-it:free",
+            model: args.model,
             messages: openaiMessages,
             stream: true,
           }),
@@ -374,9 +462,18 @@ export const getChat = query({
       }),
     );
 
+    // Fetch branched chats if this is a parent chat
+    const branchedChats = await ctx.db
+      .query("chats")
+      .withIndex("by_parent_chat_and_message", (q) =>
+        q.eq("parentChatId", args.chatId),
+      )
+      .collect();
+
     return {
       ...chat,
       messages: messagesWithFiles,
+      branchedChats: branchedChats, // Include branched chats in the result
     };
   },
 });
@@ -390,6 +487,22 @@ export const deleteChat = mutation({
     const chat = await ctx.db.get(args.chatId);
     if (!chat || chat.userId !== userId) {
       throw new Error("Chat not found or unauthorized");
+    }
+
+    // Find all branches of this chat
+    const branches = await ctx.db
+      .query("chats")
+      .withIndex("by_parent_chat_and_message", (q) =>
+        q.eq("parentChatId", args.chatId),
+      )
+      .collect();
+
+    // Update branches to remove parent reference
+    for (const branch of branches) {
+      await ctx.db.patch(branch._id, {
+        parentChatId: undefined,
+        branchedFromMessageId: undefined,
+      });
     }
 
     // Delete all messages in the chat
@@ -522,5 +635,44 @@ export const checkStreamCancelled = internalQuery({
       .collect();
 
     return controllers.length === 0;
+  },
+});
+
+export const deleteMessage = mutation({
+  args: {
+    messageId: v.id("messages"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const message = await ctx.db.get(args.messageId);
+    if (!message) throw new Error("Message not found");
+
+    const chat = await ctx.db.get(message.chatId);
+    if (!chat || chat.userId !== userId) {
+      throw new Error("Chat not found or unauthorized");
+    }
+
+    // If this is a user message, find and delete the assistant's reply
+    if (message.role === "user") {
+      const messages = await ctx.db
+        .query("messages")
+        .withIndex("by_chat", (q) => q.eq("chatId", message.chatId))
+        .collect();
+
+      // Find the index of the current message
+      const messageIndex = messages.findIndex((m) => m._id === args.messageId);
+
+      // If there's a next message and it's from the assistant, delete it
+      if (messageIndex !== -1 && messageIndex + 1 < messages.length) {
+        const nextMessage = messages[messageIndex + 1];
+        if (nextMessage.role === "assistant") {
+          await ctx.db.delete(nextMessage._id);
+        }
+      }
+    }
+
+    await ctx.db.delete(args.messageId);
   },
 });

@@ -16,9 +16,15 @@ interface MessagesProps {
       metadata: any;
     }>;
   }>;
+  chatId: Id<"chats">;
+  branchedChats?: Array<{
+    _id: Id<"chats">;
+    branchedFromMessageId?: Id<"messages">;
+    title: string;
+  }>;
 }
 
-export function Messages({ messages }: MessagesProps) {
+export function Messages({ messages, chatId, branchedChats }: MessagesProps) {
   const {
     containerRef,
     endRef,
@@ -60,7 +66,20 @@ export function Messages({ messages }: MessagesProps) {
     >
       <div className="space-y-6 pb-4">
         {messages.map((message) => (
-          <Message key={message._id} message={message} />
+          <Message
+            key={message._id}
+            message={message}
+            chatId={chatId}
+            branchedChats={branchedChats?.filter(
+              (
+                chat,
+              ): chat is typeof chat & {
+                branchedFromMessageId: Id<"messages">;
+              } =>
+                chat.branchedFromMessageId !== undefined &&
+                chat.branchedFromMessageId === message._id,
+            )}
+          />
         ))}
         <div ref={endRef} />
       </div>

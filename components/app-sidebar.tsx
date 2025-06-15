@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, GitBranch } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -25,6 +25,7 @@ interface Chat {
   title: string;
   model: string;
   lastMessageAt: number;
+  parentChatId?: Id<"chats">;
 }
 
 interface ChatSidebarProps {
@@ -137,7 +138,10 @@ export function AppSidebar({
                 `}
                   >
                     <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 flex items-center gap-1">
+                        {chat.parentChatId && (
+                          <GitBranch className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        )}
                         <h3 className="font-medium text-sm text-gray-900 truncate">
                           {chat.title}
                         </h3>

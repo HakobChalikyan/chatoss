@@ -291,7 +291,15 @@ export function ChatInterface({
             </div>
           </div>
         ) : (
-          <Messages messages={chat?.messages || []} />
+          <Messages
+            messages={chat?.messages || []}
+            chatId={conversationId as Id<"chats">}
+            branchedChats={chat?.branchedChats?.map((branch) => ({
+              _id: branch._id,
+              branchedFromMessageId: branch.branchedFromMessageId,
+              title: branch.title,
+            }))}
+          />
         )}
       </div>
 
