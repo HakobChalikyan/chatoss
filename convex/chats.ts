@@ -242,7 +242,7 @@ export const generateAIResponseStreaming = internalAction({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "google/gemma-3-27b-it:free",
+            model: args.model,
             messages: openaiMessages,
             stream: true,
           }),

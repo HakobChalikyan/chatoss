@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Markdown } from "../markdown";
 import { PreviewAttachment } from "../preview-attachment";
 import { MessageActions } from "./message-actions";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
@@ -11,11 +11,19 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Edit3,
+  Check,
+  X,
+  GitBranch,
+  RotateCcw,
+  Sparkles,
+  MessageSquare,
+} from "lucide-react";
 
 interface MessageProps {
   message: {
@@ -39,22 +47,22 @@ interface MessageProps {
 }
 
 const StreamingIndicator = () => (
-  <div className="flex items-center gap-1 text-gray-400">
+  <div className="flex items-center gap-2 text-gray-400">
     <div className="flex space-x-1">
       <div
-        className="w-1 h-1 bg-current rounded-full animate-bounce"
+        className="w-1.5 h-1.5 bg-current rounded-full animate-bounce"
         style={{ animationDelay: "0ms" }}
       ></div>
       <div
-        className="w-1 h-1 bg-current rounded-full animate-bounce"
+        className="w-1.5 h-1.5 bg-current rounded-full animate-bounce"
         style={{ animationDelay: "150ms" }}
       ></div>
       <div
-        className="w-1 h-1 bg-current rounded-full animate-bounce"
+        className="w-1.5 h-1.5 bg-current rounded-full animate-bounce"
         style={{ animationDelay: "300ms" }}
       ></div>
     </div>
-    <span className="text-xs ml-1">AI is typing...</span>
+    <span className="text-xs font-medium">AI is thinking...</span>
   </div>
 );
 
@@ -69,15 +77,33 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(message.content);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   const createBranchedChat = useMutation(api.chats.createBranchedChat);
   const deleteMessage = useMutation(api.chats.deleteMessage);
   const sendMessage = useMutation(api.chats.sendMessage);
   const currentChat = useQuery(api.chats.getChat, { chatId });
   const router = useRouter();
 
+  // Auto-resize textarea and focus when editing starts
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.focus();
+      textareaRef.current.setSelectionRange(
+        textareaRef.current.value.length,
+        textareaRef.current.value.length,
+      );
+      // Auto-resize
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [isEditing]);
+
   const handleEdit = () => {
     setIsEditing(true);
     setEditedContent(message.content);
+    setIsExpanded(true);
   };
 
   const handleEditConfirm = (branch: boolean) => {
@@ -138,23 +164,43 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
     }
 
     setIsEditing(false);
+    setIsExpanded(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter") {
+      if (e.shiftKey) {
+        // Allow Shift+Enter to create a new line
+        return;
+      }
+      // Regular Enter submits
       e.preventDefault();
       setShowEditDialog(true);
     } else if (e.key === "Escape") {
       setIsEditing(false);
       setEditedContent(message.content);
+      setIsExpanded(false);
     }
+  };
+
+  const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setEditedContent(e.target.value);
+    // Auto-resize
+    e.target.style.height = "auto";
+    e.target.style.height = `${e.target.scrollHeight}px`;
+  };
+
+  const cancelEdit = () => {
+    setIsEditing(false);
+    setEditedContent(message.content);
+    setIsExpanded(false);
   };
 
   const renderMessageFiles = (files: MessageProps["message"]["files"]) => {
     if (!files || files.length === 0) return null;
 
     return (
-      <div className="mt-2 space-y-2">
+      <div className="mt-3 space-y-2">
         {files.map((file, index) => (
           <PreviewAttachment
             key={index}
@@ -175,72 +221,128 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
   return (
     <>
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Message</DialogTitle>
-            <DialogDescription>
-              Would you like to branch off this message or edit and resubmit it?
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="flex items-center gap-2">
+              <Edit3 className="w-5 h-5 text-blue-600" />
+              Edit Message
+            </DialogTitle>
+            <DialogDescription className="text-sm leading-relaxed">
+              Choose how you'd like to handle your edited message:
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="secondary"
+
+          <div className="grid gap-3">
+            <div
               onClick={() => handleEditConfirm(false)}
+              className="cursor-pointer flex items-start gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
             >
-              Edit & Resubmit
-            </Button>
-            <Button onClick={() => handleEditConfirm(true)}>Branch Off</Button>
-          </DialogFooter>
+              <RotateCcw className="w-4 h-4 text-gray-600" />
+              <div>
+                <p className="font-medium text-sm">Edit & Resubmit</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Replace the original message and regenerate the conversation
+                </p>
+              </div>
+            </div>
+
+            <div
+              onClick={() => handleEditConfirm(true)}
+              className="cursor-pointer flex items-start gap-3 p-3 rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors"
+            >
+              <GitBranch className="w-4 h-4 text-gray-500" />
+              <div>
+                <p className="font-medium text-sm text-blue-900">Branch Off</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Create a new conversation thread from this point
+                </p>
+              </div>
+            </div>
+
+            <div
+              onClick={() => setShowEditDialog(false)}
+              className="cursor-pointer flex items-start gap-3 p-3 rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors"
+            >
+              <X className="w-4 h-4 text-gray-500 mt-1" />
+              <div>
+                <p className="font-medium text-sm text-blue-900">Cancel</p>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
       <div
         className={cn(
-          "flex flex-col max-w-3xl mx-auto",
+          "flex flex-col max-w-3xl mx-auto transition-all duration-200",
           message.role === "user" ? "items-end" : "items-start",
+          isExpanded && "max-w-4xl",
         )}
       >
         <div
           className={cn(
-            "rounded-lg px-4 py-2 relative group",
+            "rounded-xl px-4 py-3 relative group shadow-sm transition-all duration-200",
             message.role === "user"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-100 text-gray-800",
+              ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white"
+              : "bg-white border border-gray-200 text-gray-800 hover:shadow-md",
+            isEditing && "ring-2 ring-blue-300 shadow-lg",
           )}
         >
           {isEditing ? (
-            <div className="flex flex-col gap-2">
-              <textarea
-                value={editedContent}
-                onChange={(e) => setEditedContent(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="w-full min-h-[100px] p-2 rounded-md bg-white text-gray-800 resize-y"
-                placeholder="Edit your message..."
-              />
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => {
-                    setIsEditing(false);
-                    setEditedContent(message.content);
+            <div className="space-y-3">
+              <div className="relative">
+                <textarea
+                  ref={textareaRef}
+                  value={editedContent}
+                  onChange={handleTextareaInput}
+                  onKeyDown={handleKeyDown}
+                  className={cn(
+                    "w-full min-h-[120px] p-3 rounded-lg resize-none",
+                    "border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
+                    "bg-white text-gray-900 placeholder-gray-500",
+                    "transition-all duration-200 font-sans text-sm leading-relaxed",
+                  )}
+                  placeholder="Edit your message..."
+                  style={{
+                    minWidth: "400px",
+                    fontFamily: "system-ui, -apple-system, sans-serif",
                   }}
-                  className="px-3 py-1 text-sm bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => setShowEditDialog(true)}
-                  className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  Submit
-                </button>
+                />
+                <div className="absolute bottom-2 right-2 text-xs text-gray-400 bg-white px-2 py-1 rounded">
+                  Enter to submit
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-white flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  Press Escape to cancel
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={cancelEdit}
+                    className="flex items-center gap-1 h-8 px-3"
+                  >
+                    <X className="w-3 h-3" />
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => setShowEditDialog(true)}
+                    className="flex items-center gap-1 h-8 px-3"
+                    disabled={editedContent.trim() === ""}
+                  >
+                    <Check className="w-3 h-3" />
+                    Submit
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (
             <>
-              <div className="whitespace-pre-wrap">
+              <div className="prose prose-sm max-w-none">
                 <Markdown>
                   {isCancelled
                     ? message.content.replace("*Response was cancelled*", "")
@@ -250,14 +352,32 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
               {renderMessageFiles(message.files)}
 
               {branchedChats && branchedChats.length > 0 && (
-                <div className="flex flex-col gap-2 mt-2">
+                <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-gray-200">
+                  <span
+                    className={cn(
+                      "text-xs flex items-center gap-1 mr-2",
+                      message.role === "user"
+                        ? "text-white/80"
+                        : "text-gray-500",
+                    )}
+                  >
+                    <GitBranch className="w-3 h-3" />
+                    Branches:
+                  </span>
                   {branchedChats.map((branch) => (
                     <a
                       key={branch._id}
                       target="_blank"
                       href={`/chat/${branch._id}`}
-                      className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200"
+                      className={cn(
+                        "text-xs px-3 py-1 rounded-full transition-all duration-200",
+                        message.role === "user"
+                          ? "bg-white/20 text-white hover:bg-white/30 border-white/30 hover:border-white/40"
+                          : "bg-blue-100 text-blue-700 hover:bg-blue-200 hover:shadow-sm border border-blue-200 hover:border-blue-300",
+                        "flex items-center gap-1",
+                      )}
                     >
+                      <MessageSquare className="w-3 h-3" />
                       {branch.title}
                     </a>
                   ))}
@@ -265,18 +385,22 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
               )}
 
               {isCancelled && (
-                <div className="text-xs mt-2 text-black bg-red-300 p-4 rounded-xl italic">
-                  Response stopped by user
+                <div className="text-xs mt-3 text-red-800 bg-red-100 border border-red-200 p-3 rounded-lg flex items-center gap-2">
+                  <X className="w-4 h-4" />
+                  <span className="font-medium">Response stopped by user</span>
                 </div>
               )}
+
               <div
                 className={cn(
-                  "text-xs mt-1",
+                  "text-xs mt-2 flex items-center gap-1",
                   message.role === "user" ? "text-blue-100" : "text-gray-500",
                 )}
               >
                 {!message.isStreaming && (
-                  <span>{formatTime(message._creationTime)}</span>
+                  <span className="font-medium">
+                    {formatTime(message._creationTime)}
+                  </span>
                 )}
                 {message.isStreaming && !message.content && (
                   <StreamingIndicator />
@@ -285,13 +409,16 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
             </>
           )}
         </div>
-        <MessageActions
-          content={message.content}
-          role={message.role}
-          onEdit={message.role === "user" ? handleEdit : undefined}
-          onBranch={message.role === "assistant" ? handleBranch : undefined}
-          messageId={message._id}
-        />
+
+        {!isEditing && (
+          <MessageActions
+            content={message.content}
+            role={message.role}
+            onEdit={message.role === "user" ? handleEdit : undefined}
+            onBranch={message.role === "assistant" ? handleBranch : undefined}
+            messageId={message._id}
+          />
+        )}
       </div>
     </>
   );
