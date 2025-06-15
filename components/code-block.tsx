@@ -28,11 +28,44 @@ export function CodeBlock({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     const code = String(children);
     const extension = LANGUAGE_EXTENSIONS[language.toLowerCase()] || "txt";
     const defaultName = `code.${extension}`;
 
+    // Check if the File System Access API is supported
+    if ("showSaveFilePicker" in window) {
+      try {
+        const fileHandle = await (window as any).showSaveFilePicker({
+          suggestedName: defaultName,
+          types: [
+            {
+              description: `${language || "Text"} files`,
+              accept: {
+                "text/plain": [`.${extension}`],
+              },
+            },
+          ],
+        });
+
+        const writable = await fileHandle.createWritable();
+        await writable.write(code);
+        await writable.close();
+      } catch (err) {
+        // User cancelled or error occurred
+        if ((err as Error).name !== "AbortError") {
+          console.error("Error saving file:", err);
+          // Fallback to traditional download
+          fallbackDownload(code, defaultName);
+        }
+      }
+    } else {
+      // Fallback for browsers that don't support File System Access API
+      fallbackDownload(code, defaultName);
+    }
+  };
+
+  const fallbackDownload = (code: string, defaultName: string) => {
     const fileName = prompt("Enter file name:", defaultName);
     if (!fileName) return; // User cancelled
 
