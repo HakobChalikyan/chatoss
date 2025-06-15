@@ -5,6 +5,11 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Check, Copy, Download } from "lucide-react";
 import { LANGUAGE_EXTENSIONS } from "@/lib/language-extensions";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface CodeBlockProps {
   className?: string;
@@ -96,24 +101,32 @@ export function CodeBlock({
               : "Text"}
           </span>
           <div className="flex items-center space-x-2">
-            <button
-              onClick={handleDownload}
-              className="p-1 rounded-md hover:bg-zinc-700 text-zinc-200"
-              title="Download Code"
-            >
-              <Download className="size-4" />
-            </button>
-            <button
-              onClick={copyToClipboard}
-              className="p-1 rounded-md hover:bg-zinc-700 text-zinc-200"
-              title="Copy Code"
-            >
-              {copied ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handleDownload}
+                  className="p-1 rounded-md hover:bg-zinc-700 text-zinc-200"
+                >
+                  <Download className="size-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Download</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={copyToClipboard}
+                  className="p-1 rounded-md hover:bg-zinc-700 text-zinc-200"
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{copied ? "Copied!" : "Copy"}</TooltipContent>
+            </Tooltip>
           </div>
         </div>
         <SyntaxHighlighter
