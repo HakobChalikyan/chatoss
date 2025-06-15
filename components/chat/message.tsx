@@ -69,7 +69,6 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(message.content);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [shouldBranch, setShouldBranch] = useState(false);
   const createBranchedChat = useMutation(api.chats.createBranchedChat);
   const deleteMessage = useMutation(api.chats.deleteMessage);
   const sendMessage = useMutation(api.chats.sendMessage);
@@ -77,14 +76,13 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
   const router = useRouter();
 
   const handleEdit = () => {
-    setShowEditDialog(true);
+    setIsEditing(true);
+    setEditedContent(message.content);
   };
 
   const handleEditConfirm = (branch: boolean) => {
     setShowEditDialog(false);
-    setIsEditing(true);
-    setShouldBranch(branch);
-    setEditedContent(message.content);
+    handleResubmit(branch);
   };
 
   const handleBranch = async () => {
@@ -104,7 +102,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
     }
   };
 
-  const handleResubmit = async () => {
+  const handleResubmit = async (shouldBranch: boolean) => {
     if (editedContent.trim() === "") return;
 
     if (message.role === "user") {
@@ -145,7 +143,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleResubmit();
+      setShowEditDialog(true);
     } else if (e.key === "Escape") {
       setIsEditing(false);
       setEditedContent(message.content);
@@ -233,10 +231,10 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
                   Cancel
                 </button>
                 <button
-                  onClick={handleResubmit}
+                  onClick={() => setShowEditDialog(true)}
                   className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
                 >
-                  Resubmit
+                  Submit
                 </button>
               </div>
             </div>
