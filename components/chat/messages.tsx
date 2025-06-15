@@ -16,9 +16,10 @@ interface MessagesProps {
       metadata: any;
     }>;
   }>;
+  chatId: Id<"chats">;
 }
 
-export function Messages({ messages }: MessagesProps) {
+export function Messages({ messages, chatId }: MessagesProps) {
   const {
     containerRef,
     endRef,
@@ -60,7 +61,7 @@ export function Messages({ messages }: MessagesProps) {
     >
       <div className="space-y-6 pb-4">
         {messages.map((message) => (
-          <Message key={message._id} message={message} />
+          <Message key={message._id} message={message} chatId={chatId} />
         ))}
         <div ref={endRef} />
       </div>

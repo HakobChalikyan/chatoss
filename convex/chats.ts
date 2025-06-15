@@ -8,7 +8,6 @@ import {
 } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { api, internal } from "./_generated/api";
-import OpenAI from "openai";
 
 export const createChat = mutation({
   args: {

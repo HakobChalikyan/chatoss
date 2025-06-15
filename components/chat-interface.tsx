@@ -291,7 +291,10 @@ export function ChatInterface({
             </div>
           </div>
         ) : (
-          <Messages messages={chat?.messages || []} />
+          <Messages
+            messages={chat?.messages || []}
+            chatId={conversationId as Id<"chats">}
+          />
         )}
       </div>
 
