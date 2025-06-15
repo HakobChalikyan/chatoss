@@ -7,6 +7,15 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface MessageProps {
   message: {
@@ -59,12 +68,22 @@ const formatTime = (timestamp: number) => {
 export function Message({ message, chatId, branchedChats }: MessageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(message.content);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [shouldBranch, setShouldBranch] = useState(false);
   const createBranchedChat = useMutation(api.chats.createBranchedChat);
+  const deleteMessage = useMutation(api.chats.deleteMessage);
+  const sendMessage = useMutation(api.chats.sendMessage);
   const currentChat = useQuery(api.chats.getChat, { chatId });
   const router = useRouter();
 
   const handleEdit = () => {
+    setShowEditDialog(true);
+  };
+
+  const handleEditConfirm = (branch: boolean) => {
+    setShowEditDialog(false);
     setIsEditing(true);
+    setShouldBranch(branch);
     setEditedContent(message.content);
   };
 
@@ -90,19 +109,33 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
 
     if (message.role === "user") {
       try {
-        const newChatId = await createBranchedChat({
-          parentChatId: chatId,
-          branchedFromMessageId: message._id,
-          editedContent,
-          fileIds:
-            message.files && message.files.length > 0
-              ? message.files.map((f) => f.id)
-              : undefined,
-          model: currentChat?.model || "default",
-        });
-        router.push(`/chat/${newChatId}`);
+        if (shouldBranch) {
+          // Create a new branched chat
+          const newChatId = await createBranchedChat({
+            parentChatId: chatId,
+            branchedFromMessageId: message._id,
+            editedContent,
+            fileIds:
+              message.files && message.files.length > 0
+                ? message.files.map((f) => f.id)
+                : undefined,
+            model: currentChat?.model || "default",
+          });
+          router.push(`/chat/${newChatId}`);
+        } else {
+          // Delete the original message and create a new one
+          await deleteMessage({ messageId: message._id });
+          await sendMessage({
+            chatId,
+            content: editedContent,
+            fileIds:
+              message.files && message.files.length > 0
+                ? message.files.map((f) => f.id)
+                : undefined,
+          });
+        }
       } catch (error) {
-        console.error("Error creating branched chat:", error);
+        console.error("Error handling message edit:", error);
       }
     }
 
@@ -142,100 +175,126 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
   const isCancelled = message.content.endsWith("*Response was cancelled*");
 
   return (
-    <div
-      className={cn(
-        "flex flex-col max-w-3xl mx-auto",
-        message.role === "user" ? "items-end" : "items-start",
-      )}
-    >
+    <>
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Message</DialogTitle>
+            <DialogDescription>
+              Would you like to branch off this message or edit and resubmit it?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => handleEditConfirm(false)}
+            >
+              Edit & Resubmit
+            </Button>
+            <Button onClick={() => handleEditConfirm(true)}>Branch Off</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div
         className={cn(
-          "rounded-lg px-4 py-2 relative group",
-          message.role === "user"
-            ? "bg-blue-600 text-white"
-            : "bg-gray-100 text-gray-800",
+          "flex flex-col max-w-3xl mx-auto",
+          message.role === "user" ? "items-end" : "items-start",
         )}
       >
-        {isEditing ? (
-          <div className="flex flex-col gap-2">
-            <textarea
-              value={editedContent}
-              onChange={(e) => setEditedContent(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="w-full min-h-[100px] p-2 rounded-md bg-white text-gray-800 resize-y"
-              placeholder="Edit your message..."
-            />
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => {
-                  setIsEditing(false);
-                  setEditedContent(message.content);
-                }}
-                className="px-3 py-1 text-sm bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleResubmit}
-                className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                Resubmit
-              </button>
-            </div>
-          </div>
-        ) : (
-          <>
-            <div className="whitespace-pre-wrap">
-              <Markdown>
-                {isCancelled
-                  ? message.content.replace("*Response was cancelled*", "")
-                  : message.content}
-              </Markdown>
-            </div>
-            {renderMessageFiles(message.files)}
-
-            {branchedChats && branchedChats.length > 0 && (
-              <div className="flex flex-col gap-2 mt-2">
-                {branchedChats.map((branch) => (
-                  <a
-                    key={branch._id}
-                    href={`/chat/${branch._id}`}
-                    className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200"
-                  >
-                    {branch.title}
-                  </a>
-                ))}
+        <div
+          className={cn(
+            "rounded-lg px-4 py-2 relative group",
+            message.role === "user"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-100 text-gray-800",
+          )}
+        >
+          {isEditing ? (
+            <div className="flex flex-col gap-2">
+              <textarea
+                value={editedContent}
+                onChange={(e) => setEditedContent(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="w-full min-h-[100px] p-2 rounded-md bg-white text-gray-800 resize-y"
+                placeholder="Edit your message..."
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditedContent(message.content);
+                  }}
+                  className="px-3 py-1 text-sm bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleResubmit}
+                  className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Resubmit
+                </button>
               </div>
-            )}
-
-            {isCancelled && (
-              <div className="text-xs mt-2 text-black bg-red-300 p-4 rounded-xl italic">
-                Response stopped by user
-              </div>
-            )}
-            <div
-              className={cn(
-                "text-xs mt-1",
-                message.role === "user" ? "text-blue-100" : "text-gray-500",
-              )}
-            >
-              {!message.isStreaming && (
-                <span>{formatTime(message._creationTime)}</span>
-              )}
-              {message.isStreaming && !message.content && (
-                <StreamingIndicator />
-              )}
             </div>
-          </>
-        )}
+          ) : (
+            <>
+              <div className="whitespace-pre-wrap">
+                <Markdown>
+                  {isCancelled
+                    ? message.content.replace("*Response was cancelled*", "")
+                    : message.content}
+                </Markdown>
+              </div>
+              {renderMessageFiles(message.files)}
+
+              {branchedChats && branchedChats.length > 0 && (
+                <div className="flex flex-col gap-2 mt-2">
+                  {branchedChats.map((branch) => (
+                    <a
+                      key={branch._id}
+                      target="_blank"
+                      href={`/chat/${branch._id}`}
+                      className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200"
+                    >
+                      {branch.title}
+                    </a>
+                  ))}
+                </div>
+              )}
+
+              {isCancelled && (
+                <div className="text-xs mt-2 text-black bg-red-300 p-4 rounded-xl italic">
+                  Response stopped by user
+                </div>
+              )}
+              <div
+                className={cn(
+                  "text-xs mt-1",
+                  message.role === "user" ? "text-blue-100" : "text-gray-500",
+                )}
+              >
+                {!message.isStreaming && (
+                  <span>{formatTime(message._creationTime)}</span>
+                )}
+                {message.isStreaming && !message.content && (
+                  <StreamingIndicator />
+                )}
+              </div>
+            </>
+          )}
+        </div>
+        <MessageActions
+          content={message.content}
+          role={message.role}
+          onEdit={message.role === "user" ? handleEdit : undefined}
+          onBranch={message.role === "assistant" ? handleBranch : undefined}
+          messageId={message._id}
+        />
       </div>
-      <MessageActions
-        content={message.content}
-        role={message.role}
-        onEdit={message.role === "user" ? handleEdit : undefined}
-        onBranch={message.role === "assistant" ? handleBranch : undefined}
-        messageId={message._id}
-      />
-    </div>
+    </>
   );
 }
