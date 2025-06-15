@@ -68,6 +68,23 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
     setEditedContent(message.content);
   };
 
+  const handleBranch = async () => {
+    if (message.role === "assistant") {
+      try {
+        const newChatId = await createBranchedChat({
+          parentChatId: chatId,
+          branchedFromMessageId: message._id,
+          editedContent: "",
+          fileIds: undefined,
+          model: currentChat?.model || "default",
+        });
+        router.push(`/chat/${newChatId}`);
+      } catch (error) {
+        console.error("Error creating branched chat:", error);
+      }
+    }
+  };
+
   const handleResubmit = async () => {
     if (editedContent.trim() === "") return;
 
@@ -216,6 +233,8 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
         content={message.content}
         role={message.role}
         onEdit={message.role === "user" ? handleEdit : undefined}
+        onBranch={message.role === "assistant" ? handleBranch : undefined}
+        messageId={message._id}
       />
     </div>
   );

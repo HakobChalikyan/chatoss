@@ -75,7 +75,7 @@ export const createBranchedChat = mutation({
     // Create a new chat for the branch
     const newChatId = await ctx.db.insert("chats", {
       userId,
-      title: `Branch from: ${parentChat.title}`,
+      title: `Branched: ${parentChat.title}`,
       model: args.model, // Use the same model as the parent chat
       lastMessageAt: Date.now(),
       parentChatId: args.parentChatId,
@@ -84,7 +84,6 @@ export const createBranchedChat = mutation({
 
     // Copy historical messages from the parent chat up to the branched message
     for (const message of parentMessages) {
-      if (message._id === args.branchedFromMessageId) break; // Stop at the branched message
       await ctx.db.insert("messages", {
         chatId: newChatId,
         role: message.role,
@@ -92,26 +91,29 @@ export const createBranchedChat = mutation({
         fileIds: message.fileIds,
         isStreaming: message.isStreaming || false, // Ensure isStreaming is boolean
       });
+      if (message._id === args.branchedFromMessageId) break; // Stop after copying the branched message
     }
 
-    // Add the edited message to the new branched chat
-    await ctx.db.insert("messages", {
-      chatId: newChatId,
-      role: "user",
-      content: args.editedContent,
-      fileIds: args.fileIds,
-    });
-
-    // Trigger AI response for the new message in the branched chat
-    await ctx.scheduler.runAfter(
-      0,
-      internal.chats.generateAIResponseStreaming,
-      {
-        userId,
+    // Only add a new message if there's edited content
+    if (args.editedContent.trim()) {
+      await ctx.db.insert("messages", {
         chatId: newChatId,
-        model: args.model,
-      },
-    );
+        role: "user",
+        content: args.editedContent,
+        fileIds: args.fileIds,
+      });
+
+      // Trigger AI response for the new message in the branched chat
+      await ctx.scheduler.runAfter(
+        0,
+        internal.chats.generateAIResponseStreaming,
+        {
+          userId,
+          chatId: newChatId,
+          model: args.model,
+        },
+      );
+    }
 
     return newChatId;
   },
@@ -467,6 +469,22 @@ export const deleteChat = mutation({
     const chat = await ctx.db.get(args.chatId);
     if (!chat || chat.userId !== userId) {
       throw new Error("Chat not found or unauthorized");
+    }
+
+    // Find all branches of this chat
+    const branches = await ctx.db
+      .query("chats")
+      .withIndex("by_parent_chat_and_message", (q) =>
+        q.eq("parentChatId", args.chatId),
+      )
+      .collect();
+
+    // Update branches to remove parent reference
+    for (const branch of branches) {
+      await ctx.db.patch(branch._id, {
+        parentChatId: undefined,
+        branchedFromMessageId: undefined,
+      });
     }
 
     // Delete all messages in the chat
