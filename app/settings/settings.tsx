@@ -3,17 +3,17 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { ApiKeyForm } from "@/app/settings/api-key-form";
-
-// Import shadcn components
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator"; // Good for visual separation
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 
 export function Settings() {
   const { signOut } = useAuthActions();
   const user = useQuery(api.user.currentUser);
+  const router = useRouter();
 
   if (user === undefined) {
     return null; // Still loading
@@ -21,16 +21,21 @@ export function Settings() {
 
   // Handle the case where user is null (not logged in)
   if (user === null) {
-    // You might want to redirect to a login page or display a message
-    return (
-      <div className="container mx-auto py-10 text-center">
-        <p className="text-lg text-muted-foreground">Please log in to view settings.</p>
-      </div>
-    );
+    router.push("/signin");
+    return null;
   }
 
   return (
     <div className="container mx-auto py-10 max-w-2xl">
+      <Button
+      variant="ghost"
+      size="sm"
+      onClick={() => router.push("/")}
+      className="gap-2"
+      >
+        <ArrowLeft className="size-4" />
+        Back to chat
+      </Button>
       <div className="mb-8 space-y-2">
         <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl">
           Settings
