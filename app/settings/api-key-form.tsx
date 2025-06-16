@@ -18,7 +18,7 @@ export function ApiKeyForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await saveApiKey({ apiKey, model: "openai" });
+      await saveApiKey({ apiKey, model: "openrouter" });
       setIsEditing(false);
       toast("API key saved successfully");
     } catch (error) {
@@ -30,7 +30,7 @@ export function ApiKeyForm() {
     return (
       <div className="space-y-4">
         <div>
-          <Label>OpenAI API Key</Label>
+          <Label>OpenRouter API Key</Label>
           <p className="text-sm text-muted-foreground mt-2">
             Your API key is saved and secure
           </p>
@@ -43,7 +43,7 @@ export function ApiKeyForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <Label htmlFor="apiKey">OpenAI API Key</Label>
+        <Label htmlFor="apiKey">OpenRouter API Key</Label>
         <Input
           id="apiKey"
           type="password"
