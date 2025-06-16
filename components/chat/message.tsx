@@ -40,6 +40,13 @@ interface MessageProps {
     _creationTime: number;
     isStreaming?: boolean;
     model: string;
+    parts?: Array<{
+      type: "text" | "image_url";
+      text?: string;
+      image_url?: {
+        url: string;
+      };
+    }>;
     files?: Array<{
       id: Id<"_storage">;
       url: string | null;
@@ -204,7 +211,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
     if (!files || files.length === 0) return null;
 
     return (
-      <div className="mt-3 space-y-2">
+      <div className="mt-3 space-y-2 flex justify-center">
         {files.map((file, index) => (
           <PreviewAttachment
             key={index}
@@ -395,11 +402,31 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
                 </div>
               )}
               <div className="prose prose-sm max-w-none">
-                <Markdown>
-                  {isCancelled
-                    ? message.content.replace("*Response was cancelled*", "")
-                    : message.content}
-                </Markdown>
+                {message.parts ? (
+                  <div className="space-y-4">
+                    {message.parts.map((part, index) => {
+                      if (part.type === "text") {
+                        return (
+                          <Markdown key={index}>
+                            {isCancelled
+                              ? (part.text || "").replace(
+                                  "*Response was cancelled*",
+                                  "",
+                                )
+                              : part.text || ""}
+                          </Markdown>
+                        );
+                      }
+                      return null;
+                    })}
+                  </div>
+                ) : (
+                  <Markdown>
+                    {isCancelled
+                      ? message.content.replace("*Response was cancelled*", "")
+                      : message.content}
+                  </Markdown>
+                )}
               </div>
               {renderMessageFiles(message.files)}
 

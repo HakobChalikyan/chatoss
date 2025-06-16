@@ -19,9 +19,9 @@ export const AI_MODELS: AIModel[] = [
     capabilities: {
       reasoning: true,
       imageGeneration: false,
-      imageUpload: false,
+      imageUpload: true,
       webSearch: true,
-      fileUpload: true,
+      fileUpload: false,
     },
   },
   {
@@ -33,7 +33,7 @@ export const AI_MODELS: AIModel[] = [
       imageGeneration: false,
       imageUpload: true,
       webSearch: true,
-      fileUpload: true,
+      fileUpload: false,
     },
   },
   {
@@ -43,9 +43,9 @@ export const AI_MODELS: AIModel[] = [
     capabilities: {
       reasoning: true,
       imageGeneration: false,
-      imageUpload: true,
+      imageUpload: false,
       webSearch: true,
-      fileUpload: true,
+      fileUpload: false,
     },
   },
   {
@@ -57,7 +57,7 @@ export const AI_MODELS: AIModel[] = [
       imageGeneration: false,
       imageUpload: false,
       webSearch: true,
-      fileUpload: true,
+      fileUpload: false,
     },
   },
   {
@@ -69,7 +69,7 @@ export const AI_MODELS: AIModel[] = [
       imageGeneration: false,
       imageUpload: false,
       webSearch: true,
-      fileUpload: true,
+      fileUpload: false,
     },
   },
   {
@@ -81,7 +81,7 @@ export const AI_MODELS: AIModel[] = [
       imageGeneration: false,
       imageUpload: false,
       webSearch: true,
-      fileUpload: true,
+      fileUpload: false,
     },
   },
 ];

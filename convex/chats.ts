@@ -26,12 +26,39 @@ export const createChat = mutation({
       lastMessageAt: Date.now(),
     });
 
+    // Create message parts from content and fileIds
+    const parts: Array<
+      | { type: "text"; text: string }
+      | { type: "image_url"; image_url: { url: string } }
+    > = [
+      {
+        type: "text",
+        text: args.initialMessage,
+      },
+    ];
+
+    // Add image parts from fileIds
+    if (args.fileIds && args.fileIds.length > 0) {
+      for (const fileId of args.fileIds) {
+        const url = await ctx.storage.getUrl(fileId);
+        if (url) {
+          parts.push({
+            type: "image_url",
+            image_url: {
+              url,
+            },
+          });
+        }
+      }
+    }
+
     await ctx.db.insert("messages", {
       chatId,
       role: "user",
       content: args.initialMessage,
       model: args.model,
       fileIds: args.fileIds,
+      parts,
     });
 
     await ctx.scheduler.runAfter(
@@ -144,6 +171,22 @@ export const sendMessage = mutation({
     content: v.string(),
     model: v.string(),
     fileIds: v.optional(v.array(v.id("_storage"))),
+    parts: v.optional(
+      v.array(
+        v.union(
+          v.object({
+            type: v.literal("text"),
+            text: v.string(),
+          }),
+          v.object({
+            type: v.literal("image_url"),
+            image_url: v.object({
+              url: v.string(),
+            }),
+          }),
+        ),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -154,12 +197,36 @@ export const sendMessage = mutation({
       throw new Error("Chat not found or unauthorized");
     }
 
+    // Create message parts from content and fileIds
+    const parts = args.parts || [
+      {
+        type: "text",
+        text: args.content,
+      },
+    ];
+
+    // Add image parts from fileIds
+    if (args.fileIds && args.fileIds.length > 0) {
+      for (const fileId of args.fileIds) {
+        const url = await ctx.storage.getUrl(fileId);
+        if (url) {
+          parts.push({
+            type: "image_url",
+            image_url: {
+              url,
+            },
+          });
+        }
+      }
+    }
+
     await ctx.db.insert("messages", {
       chatId: args.chatId,
       role: "user",
       content: args.content,
       model: args.model,
       fileIds: args.fileIds,
+      parts,
     });
 
     await ctx.db.patch(args.chatId, {
@@ -191,10 +258,24 @@ export const generateAIResponseStreaming = internalAction({
       chatId: args.chatId,
     });
 
-    const openaiMessages = messages.map((msg: any) => ({
-      role: msg.role as "user" | "assistant",
-      content: msg.content,
-    }));
+    const openaiMessages = messages.map((msg: any) => {
+      if (msg.parts) {
+        return {
+          role: msg.role as "user" | "assistant",
+          content: msg.parts,
+        };
+      }
+      // For backward compatibility with old messages
+      return {
+        role: msg.role as "user" | "assistant",
+        content: [
+          {
+            type: "text",
+            text: msg.content,
+          },
+        ],
+      };
+    });
 
     let fullContent = "";
     let fullReasoning = "";
@@ -371,10 +452,16 @@ export const createStreamingMessage = internalMutation({
     const messageId = await ctx.db.insert("messages", {
       chatId: args.chatId,
       role: "assistant",
-      content: "",
+      content: "", // Keep for backward compatibility
       reasoning: "",
       model: args.model,
       isStreaming: true,
+      parts: [
+        {
+          type: "text",
+          text: "",
+        },
+      ],
     });
 
     await ctx.db.patch(args.chatId, {
@@ -394,9 +481,15 @@ export const updateStreamingMessage = internalMutation({
   },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.messageId, {
-      content: args.content,
+      content: args.content, // Keep for backward compatibility
       reasoning: args.reasoning,
       isStreaming: !args.isComplete,
+      parts: [
+        {
+          type: "text",
+          text: args.content,
+        },
+      ],
     });
   },
 });
@@ -421,8 +514,14 @@ export const addAIMessage = internalMutation({
     await ctx.db.insert("messages", {
       chatId: args.chatId,
       role: "assistant",
-      content: args.content,
+      content: args.content, // Keep for backward compatibility
       model: args.model,
+      parts: [
+        {
+          type: "text",
+          text: args.content,
+        },
+      ],
     });
 
     await ctx.db.patch(args.chatId, {
@@ -543,17 +642,6 @@ export const deleteChat = mutation({
       await ctx.db.delete(message._id);
     }
 
-    // Delete chat files
-    const chatFiles = await ctx.db
-      .query("chatFiles")
-      .withIndex("by_chat", (q) => q.eq("chatId", args.chatId))
-      .collect();
-
-    for (const file of chatFiles) {
-      await ctx.storage.delete(file.storageId);
-      await ctx.db.delete(file._id);
-    }
-
     // Delete the chat
     await ctx.db.delete(args.chatId);
   },
@@ -565,35 +653,6 @@ export const generateUploadUrl = mutation({
     if (!userId) throw new Error("Not authenticated");
 
     return await ctx.storage.generateUploadUrl();
-  },
-});
-
-export const saveFileToChat = mutation({
-  args: {
-    chatId: v.id("chats"),
-    storageId: v.id("_storage"),
-    fileName: v.string(),
-    fileType: v.string(),
-    fileSize: v.number(),
-  },
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
-
-    const chat = await ctx.db.get(args.chatId);
-    if (!chat || chat.userId !== userId) {
-      throw new Error("Chat not found or unauthorized");
-    }
-
-    await ctx.db.insert("chatFiles", {
-      chatId: args.chatId,
-      storageId: args.storageId,
-      fileName: args.fileName,
-      fileType: args.fileType,
-      fileSize: args.fileSize,
-    });
-
-    return args.storageId;
   },
 });
 

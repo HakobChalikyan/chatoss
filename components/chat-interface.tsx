@@ -38,7 +38,6 @@ export function ChatInterface({
   const createChat = useMutation(api.chats.createChat);
   const sendMessage = useMutation(api.chats.sendMessage);
   const generateUploadUrl = useMutation(api.chats.generateUploadUrl);
-  const saveFileToChat = useMutation(api.chats.saveFileToChat);
   const cancelStream = useMutation(api.chats.cancelStream);
   const chat = useQuery(
     api.chats.getChat,
@@ -88,16 +87,9 @@ export function ChatInterface({
     if (isNewChat) {
       setIsCreating(true);
       try {
-        // First create the chat
-        const chatId = await createChat({
-          title: input.trim().slice(0, 50) + (input.length > 50 ? "..." : ""),
-          initialMessage: input.trim(),
-          model: selectedModel.id,
-        });
-
-        // Then upload files and save them to the chat
+        // Upload files first if any
+        const fileIds: Id<"_storage">[] = [];
         if (uploadedFiles.length > 0) {
-          const fileIds: Id<"_storage">[] = [];
           for (const { file } of uploadedFiles) {
             const uploadUrl = await generateUploadUrl();
             const result = await fetch(uploadUrl, {
@@ -112,24 +104,16 @@ export function ChatInterface({
 
             const { storageId } = await result.json();
             fileIds.push(storageId);
-
-            await saveFileToChat({
-              chatId,
-              storageId,
-              fileName: file.name,
-              fileType: file.type,
-              fileSize: file.size,
-            });
           }
-
-          // Update the chat with file IDs
-          await sendMessage({
-            chatId,
-            content: input.trim() || "📎 Files attached",
-            fileIds,
-            model: selectedModel.id,
-          });
         }
+
+        // Create chat with files
+        const chatId = await createChat({
+          title: input.trim().slice(0, 50) + (input.length > 50 ? "..." : ""),
+          initialMessage: input.trim() || "📎 Files attached",
+          model: selectedModel.id,
+          fileIds: fileIds.length > 0 ? fileIds : undefined,
+        });
 
         onChatCreated?.(chatId);
       } catch (error) {
@@ -142,7 +126,7 @@ export function ChatInterface({
         const messageText = input.trim() || "📎 Files attached";
         const fileIds: Id<"_storage">[] = [];
 
-        // Upload files and save them to the chat
+        // Upload files if any
         if (uploadedFiles.length > 0) {
           for (const { file } of uploadedFiles) {
             const uploadUrl = await generateUploadUrl();
@@ -158,14 +142,6 @@ export function ChatInterface({
 
             const { storageId } = await result.json();
             fileIds.push(storageId);
-
-            await saveFileToChat({
-              chatId: conversationId as Id<"chats">,
-              storageId,
-              fileName: file.name,
-              fileType: file.type,
-              fileSize: file.size,
-            });
           }
         }
 
