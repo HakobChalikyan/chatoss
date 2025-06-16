@@ -12,22 +12,8 @@ import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Messages } from "./chat/messages";
 import { ChatInput } from "./chat/chat-input";
-import { AI_MODELS } from "./chat/ai-model-selector";
 import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
-
-interface Message {
-  _id: Id<"messages">;
-  role: "user" | "assistant";
-  content: string;
-  model: string;
-  _creationTime: number;
-  isStreaming?: boolean;
-  files?: Array<{
-    id: Id<"_storage">;
-    url: string | null;
-    metadata: any;
-  }>;
-}
+import { AI_MODELS } from "@/lib/ai-models";
 
 interface ChatInterfaceProps {
   conversationId?: Id<"chats"> | undefined;

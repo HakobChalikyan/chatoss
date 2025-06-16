@@ -3,7 +3,8 @@ import { ArrowUp, Paperclip, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { PreviewAttachment } from "../preview-attachment";
-import { AIModelSelector, AIModel } from "./ai-model-selector";
+import { AIModelSelector } from "./ai-model-selector";
+import { AIModel } from "@/lib/ai-models";
 
 interface ChatInputProps {
   input: string;
