@@ -3,7 +3,8 @@ import { ArrowUp, Paperclip, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { PreviewAttachment } from "../preview-attachment";
-import { AIModelSelector, AIModel } from "./ai-model-selector";
+import { AIModelSelector } from "./ai-model-selector";
+import { AIModel } from "@/lib/ai-models";
 
 interface ChatInputProps {
   input: string;
@@ -35,6 +36,22 @@ export function ChatInput({
   onModelSelect,
 }: ChatInputProps) {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [fileUrls, setFileUrls] = React.useState<Record<number, string>>({});
+
+  // Create and cleanup object URLs
+  React.useEffect(() => {
+    const urls: Record<number, string> = {};
+    uploadedFiles.forEach((file, index) => {
+      urls[index] = URL.createObjectURL(file.file);
+    });
+
+    setFileUrls(urls);
+
+    // Cleanup function
+    return () => {
+      Object.values(urls).forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [uploadedFiles]);
 
   return (
     <div className="relative">
@@ -47,7 +64,7 @@ export function ChatInput({
                 <PreviewAttachment
                   key={index}
                   attachment={{
-                    url: URL.createObjectURL(file.file),
+                    url: fileUrls[index] || "",
                     name: file.file.name,
                     contentType: file.file.type,
                   }}

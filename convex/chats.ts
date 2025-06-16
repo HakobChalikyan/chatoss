@@ -12,8 +12,8 @@ import { api, internal } from "./_generated/api";
 export const createChat = mutation({
   args: {
     title: v.string(),
-    model: v.string(),
     initialMessage: v.string(),
+    model: v.string(),
     fileIds: v.optional(v.array(v.id("_storage"))),
   },
   handler: async (ctx, args) => {
@@ -23,15 +23,42 @@ export const createChat = mutation({
     const chatId = await ctx.db.insert("chats", {
       userId,
       title: args.title,
-      model: args.model,
       lastMessageAt: Date.now(),
     });
+
+    // Create message parts from content and fileIds
+    const parts: Array<
+      | { type: "text"; text: string }
+      | { type: "image_url"; image_url: { url: string } }
+    > = [
+      {
+        type: "text",
+        text: args.initialMessage,
+      },
+    ];
+
+    // Add image parts from fileIds
+    if (args.fileIds && args.fileIds.length > 0) {
+      for (const fileId of args.fileIds) {
+        const url = await ctx.storage.getUrl(fileId);
+        if (url) {
+          parts.push({
+            type: "image_url",
+            image_url: {
+              url,
+            },
+          });
+        }
+      }
+    }
 
     await ctx.db.insert("messages", {
       chatId,
       role: "user",
       content: args.initialMessage,
+      model: args.model,
       fileIds: args.fileIds,
+      parts,
     });
 
     await ctx.scheduler.runAfter(
@@ -82,7 +109,6 @@ export const createBranchedChat = mutation({
     const newChatId = await ctx.db.insert("chats", {
       userId,
       title: `Branched: ${parentChat.title}`,
-      model: args.model,
       lastMessageAt: Date.now(),
       parentChatId: args.parentChatId,
       branchedFromMessageId: args.branchedFromMessageId,
@@ -100,6 +126,7 @@ export const createBranchedChat = mutation({
         chatId: newChatId,
         role: message.role,
         content: message.content,
+        model: message.model,
         fileIds: message.fileIds,
         isStreaming: message.isStreaming || false,
       });
@@ -118,6 +145,7 @@ export const createBranchedChat = mutation({
         chatId: newChatId,
         role: "user",
         content: args.editedContent,
+        model: args.model,
         fileIds: args.fileIds,
       });
 
@@ -141,7 +169,24 @@ export const sendMessage = mutation({
   args: {
     chatId: v.id("chats"),
     content: v.string(),
+    model: v.string(),
     fileIds: v.optional(v.array(v.id("_storage"))),
+    parts: v.optional(
+      v.array(
+        v.union(
+          v.object({
+            type: v.literal("text"),
+            text: v.string(),
+          }),
+          v.object({
+            type: v.literal("image_url"),
+            image_url: v.object({
+              url: v.string(),
+            }),
+          }),
+        ),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -152,11 +197,36 @@ export const sendMessage = mutation({
       throw new Error("Chat not found or unauthorized");
     }
 
+    // Create message parts from content and fileIds
+    const parts = args.parts || [
+      {
+        type: "text",
+        text: args.content,
+      },
+    ];
+
+    // Add image parts from fileIds
+    if (args.fileIds && args.fileIds.length > 0) {
+      for (const fileId of args.fileIds) {
+        const url = await ctx.storage.getUrl(fileId);
+        if (url) {
+          parts.push({
+            type: "image_url",
+            image_url: {
+              url,
+            },
+          });
+        }
+      }
+    }
+
     await ctx.db.insert("messages", {
       chatId: args.chatId,
       role: "user",
       content: args.content,
+      model: args.model,
       fileIds: args.fileIds,
+      parts,
     });
 
     await ctx.db.patch(args.chatId, {
@@ -169,7 +239,7 @@ export const sendMessage = mutation({
       {
         userId,
         chatId: args.chatId,
-        model: chat.model,
+        model: args.model,
       },
     );
 
@@ -188,18 +258,34 @@ export const generateAIResponseStreaming = internalAction({
       chatId: args.chatId,
     });
 
-    const openaiMessages = messages.map((msg: any) => ({
-      role: msg.role as "user" | "assistant",
-      content: msg.content,
-    }));
+    const openaiMessages = messages.map((msg: any) => {
+      if (msg.parts) {
+        return {
+          role: msg.role as "user" | "assistant",
+          content: msg.parts,
+        };
+      }
+      // For backward compatibility with old messages
+      return {
+        role: msg.role as "user" | "assistant",
+        content: [
+          {
+            type: "text",
+            text: msg.content,
+          },
+        ],
+      };
+    });
 
     let fullContent = "";
+    let fullReasoning = "";
 
     // Create a placeholder message for streaming
     const messageId = await ctx.runMutation(
       internal.chats.createStreamingMessage,
       {
         chatId: args.chatId,
+        model: args.model,
       },
     );
 
@@ -245,6 +331,9 @@ export const generateAIResponseStreaming = internalAction({
             model: args.model,
             messages: openaiMessages,
             stream: true,
+            reasoning: {
+              enabled: true,
+            },
           }),
           signal: controller.signal,
         },
@@ -286,11 +375,20 @@ export const generateAIResponseStreaming = internalAction({
             try {
               const parsed = JSON.parse(data);
               const content = parsed.choices[0]?.delta?.content || "";
+              const reasoning = parsed.choices[0]?.delta?.reasoning || "";
+
               if (content) {
                 fullContent += content;
+              }
+              if (reasoning) {
+                fullReasoning += reasoning;
+              }
+
+              if (content || reasoning) {
                 await ctx.runMutation(internal.chats.updateStreamingMessage, {
                   messageId,
                   content: fullContent,
+                  reasoning: fullReasoning,
                   isComplete: false,
                 });
               }
@@ -305,6 +403,7 @@ export const generateAIResponseStreaming = internalAction({
       await ctx.runMutation(internal.chats.updateStreamingMessage, {
         messageId,
         content: fullContent,
+        reasoning: fullReasoning,
         isComplete: true,
       });
 
@@ -318,6 +417,7 @@ export const generateAIResponseStreaming = internalAction({
         await ctx.runMutation(internal.chats.updateStreamingMessage, {
           messageId,
           content: fullContent + "\n\n*Response was cancelled*",
+          reasoning: fullReasoning,
           isComplete: true,
         });
       } else if (
@@ -327,12 +427,14 @@ export const generateAIResponseStreaming = internalAction({
         await ctx.runMutation(internal.chats.updateStreamingMessage, {
           messageId,
           content: fullContent + "\n\n*Response was cancelled*",
+          reasoning: fullReasoning,
           isComplete: true,
         });
       } else {
         console.error("AI response error:", error);
         await ctx.runMutation(internal.chats.addAIMessage, {
           chatId: args.chatId,
+          model: args.model,
           content:
             "I apologize, but I encountered an error generating a response. Please try again.",
         });
@@ -344,13 +446,22 @@ export const generateAIResponseStreaming = internalAction({
 export const createStreamingMessage = internalMutation({
   args: {
     chatId: v.id("chats"),
+    model: v.string(),
   },
   handler: async (ctx, args) => {
     const messageId = await ctx.db.insert("messages", {
       chatId: args.chatId,
       role: "assistant",
-      content: "",
+      content: "", // Keep for backward compatibility
+      reasoning: "",
+      model: args.model,
       isStreaming: true,
+      parts: [
+        {
+          type: "text",
+          text: "",
+        },
+      ],
     });
 
     await ctx.db.patch(args.chatId, {
@@ -365,12 +476,20 @@ export const updateStreamingMessage = internalMutation({
   args: {
     messageId: v.id("messages"),
     content: v.string(),
+    reasoning: v.optional(v.string()),
     isComplete: v.boolean(),
   },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.messageId, {
-      content: args.content,
+      content: args.content, // Keep for backward compatibility
+      reasoning: args.reasoning,
       isStreaming: !args.isComplete,
+      parts: [
+        {
+          type: "text",
+          text: args.content,
+        },
+      ],
     });
   },
 });
@@ -388,13 +507,21 @@ export const getChatMessages = internalQuery({
 export const addAIMessage = internalMutation({
   args: {
     chatId: v.id("chats"),
+    model: v.string(),
     content: v.string(),
   },
   handler: async (ctx, args) => {
     await ctx.db.insert("messages", {
       chatId: args.chatId,
       role: "assistant",
-      content: args.content,
+      content: args.content, // Keep for backward compatibility
+      model: args.model,
+      parts: [
+        {
+          type: "text",
+          text: args.content,
+        },
+      ],
     });
 
     await ctx.db.patch(args.chatId, {
@@ -515,17 +642,6 @@ export const deleteChat = mutation({
       await ctx.db.delete(message._id);
     }
 
-    // Delete chat files
-    const chatFiles = await ctx.db
-      .query("chatFiles")
-      .withIndex("by_chat", (q) => q.eq("chatId", args.chatId))
-      .collect();
-
-    for (const file of chatFiles) {
-      await ctx.storage.delete(file.storageId);
-      await ctx.db.delete(file._id);
-    }
-
     // Delete the chat
     await ctx.db.delete(args.chatId);
   },
@@ -537,35 +653,6 @@ export const generateUploadUrl = mutation({
     if (!userId) throw new Error("Not authenticated");
 
     return await ctx.storage.generateUploadUrl();
-  },
-});
-
-export const saveFileToChat = mutation({
-  args: {
-    chatId: v.id("chats"),
-    storageId: v.id("_storage"),
-    fileName: v.string(),
-    fileType: v.string(),
-    fileSize: v.number(),
-  },
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
-
-    const chat = await ctx.db.get(args.chatId);
-    if (!chat || chat.userId !== userId) {
-      throw new Error("Chat not found or unauthorized");
-    }
-
-    await ctx.db.insert("chatFiles", {
-      chatId: args.chatId,
-      storageId: args.storageId,
-      fileName: args.fileName,
-      fileType: args.fileType,
-      fileSize: args.fileSize,
-    });
-
-    return args.storageId;
   },
 });
 

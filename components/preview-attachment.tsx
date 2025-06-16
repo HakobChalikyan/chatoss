@@ -1,5 +1,10 @@
-import type { Attachment } from "ai";
 import { LoaderIcon, X } from "lucide-react";
+
+interface Attachment {
+  url: string;
+  name?: string;
+  contentType?: string;
+}
 
 export const PreviewAttachment = ({
   attachment,
@@ -15,19 +20,15 @@ export const PreviewAttachment = ({
   return (
     <div data-testid="input-attachment-preview" className="size-16">
       <div className="size-16 aspect-video bg-muted rounded-md relative flex flex-col items-center justify-center border border-muted">
-        {contentType ? (
-          contentType.startsWith("image") ? (
-            // NOTE: it is recommended to use next/image for images
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={url}
-              src={url}
-              alt={name ?? "An image attachment"}
-              className="rounded-md size-full object-cover"
-            />
-          ) : (
-            <div className="" />
-          )
+        {contentType && contentType.startsWith("image") && url ? (
+          // NOTE: it is recommended to use next/image for images
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={url}
+            src={url}
+            alt={name ?? "An image attachment"}
+            className="rounded-md size-full object-cover"
+          />
         ) : (
           <div className="" />
         )}

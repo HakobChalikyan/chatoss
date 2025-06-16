@@ -12,21 +12,8 @@ import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Messages } from "./chat/messages";
 import { ChatInput } from "./chat/chat-input";
-import { AI_MODELS } from "./chat/ai-model-selector";
 import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
-
-interface Message {
-  _id: Id<"messages">;
-  role: "user" | "assistant";
-  content: string;
-  _creationTime: number;
-  isStreaming?: boolean;
-  files?: Array<{
-    id: Id<"_storage">;
-    url: string | null;
-    metadata: any;
-  }>;
-}
+import { AI_MODELS } from "@/lib/ai-models";
 
 interface ChatInterfaceProps {
   conversationId?: Id<"chats"> | undefined;
@@ -43,7 +30,6 @@ export function ChatInterface({
     Array<{ file: File }>
   >([]);
   const [isUploading, setIsUploading] = React.useState(false);
-  const [isNewChat, setIsNewChat] = React.useState(true);
   const [isCreating, setIsCreating] = React.useState(false);
   const { isAtBottom, scrollToBottom } = useScrollToBottom();
 
@@ -52,7 +38,6 @@ export function ChatInterface({
   const createChat = useMutation(api.chats.createChat);
   const sendMessage = useMutation(api.chats.sendMessage);
   const generateUploadUrl = useMutation(api.chats.generateUploadUrl);
-  const saveFileToChat = useMutation(api.chats.saveFileToChat);
   const cancelStream = useMutation(api.chats.cancelStream);
   const chat = useQuery(
     api.chats.getChat,
@@ -61,21 +46,13 @@ export function ChatInterface({
       : "skip",
   );
 
+  let isNewChat = conversationId === undefined ? true : false;
+
   // Check if there's a streaming message
   const isStreaming = React.useMemo(() => {
     if (!chat?.messages) return false;
     return chat.messages.some((message) => message.isStreaming);
   }, [chat?.messages]);
-
-  // Reset state when conversation changes
-  React.useEffect(() => {
-    if (conversationId === undefined) {
-      setIsNewChat(true);
-      setUploadedFiles([]);
-    } else {
-      setIsNewChat(false);
-    }
-  }, [conversationId]);
 
   const handleFileUpload = async (files: FileList) => {
     if (files.length === 0) return;
@@ -110,16 +87,9 @@ export function ChatInterface({
     if (isNewChat) {
       setIsCreating(true);
       try {
-        // First create the chat
-        const chatId = await createChat({
-          title: input.trim().slice(0, 50) + (input.length > 50 ? "..." : ""),
-          model: selectedModel.id,
-          initialMessage: input.trim(),
-        });
-
-        // Then upload files and save them to the chat
+        // Upload files first if any
+        const fileIds: Id<"_storage">[] = [];
         if (uploadedFiles.length > 0) {
-          const fileIds: Id<"_storage">[] = [];
           for (const { file } of uploadedFiles) {
             const uploadUrl = await generateUploadUrl();
             const result = await fetch(uploadUrl, {
@@ -134,26 +104,18 @@ export function ChatInterface({
 
             const { storageId } = await result.json();
             fileIds.push(storageId);
-
-            await saveFileToChat({
-              chatId,
-              storageId,
-              fileName: file.name,
-              fileType: file.type,
-              fileSize: file.size,
-            });
           }
-
-          // Update the chat with file IDs
-          await sendMessage({
-            chatId,
-            content: input.trim() || "📎 Files attached",
-            fileIds,
-          });
         }
 
+        // Create chat with files
+        const chatId = await createChat({
+          title: input.trim().slice(0, 50) + (input.length > 50 ? "..." : ""),
+          initialMessage: input.trim() || "📎 Files attached",
+          model: selectedModel.id,
+          fileIds: fileIds.length > 0 ? fileIds : undefined,
+        });
+
         onChatCreated?.(chatId);
-        setIsNewChat(false);
       } catch (error) {
         toast.error("Failed to create chat");
       } finally {
@@ -164,7 +126,7 @@ export function ChatInterface({
         const messageText = input.trim() || "📎 Files attached";
         const fileIds: Id<"_storage">[] = [];
 
-        // Upload files and save them to the chat
+        // Upload files if any
         if (uploadedFiles.length > 0) {
           for (const { file } of uploadedFiles) {
             const uploadUrl = await generateUploadUrl();
@@ -180,14 +142,6 @@ export function ChatInterface({
 
             const { storageId } = await result.json();
             fileIds.push(storageId);
-
-            await saveFileToChat({
-              chatId: conversationId as Id<"chats">,
-              storageId,
-              fileName: file.name,
-              fileType: file.type,
-              fileSize: file.size,
-            });
           }
         }
 
@@ -195,6 +149,7 @@ export function ChatInterface({
           chatId: conversationId as Id<"chats">,
           content: messageText,
           fileIds: fileIds.length > 0 ? fileIds : undefined,
+          model: selectedModel.id,
         });
       } catch (error) {
         toast.error("Failed to send message");

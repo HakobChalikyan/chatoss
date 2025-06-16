@@ -21,7 +21,6 @@ export default defineSchema({
   chats: defineTable({
     userId: v.id("users"),
     title: v.string(),
-    model: v.string(),
     lastMessageAt: v.number(),
     parentChatId: v.optional(v.id("chats")),
     branchedFromMessageId: v.optional(v.id("messages")),
@@ -41,8 +40,26 @@ export default defineSchema({
     chatId: v.id("chats"),
     role: v.union(v.literal("user"), v.literal("assistant")),
     content: v.string(),
+    reasoning: v.optional(v.string()),
+    model: v.string(),
     fileIds: v.optional(v.array(v.id("_storage"))),
     isStreaming: v.optional(v.boolean()),
+    parts: v.optional(
+      v.array(
+        v.union(
+          v.object({
+            type: v.literal("text"),
+            text: v.string(),
+          }),
+          v.object({
+            type: v.literal("image_url"),
+            image_url: v.object({
+              url: v.string(),
+            }),
+          }),
+        ),
+      ),
+    ),
   }).index("by_chat", ["chatId"]),
 
   messages_v2: defineTable({
@@ -51,14 +68,6 @@ export default defineSchema({
     parts: v.any(),
     fileIds: v.optional(v.array(v.id("_storage"))),
     isStreaming: v.optional(v.boolean()),
-  }).index("by_chat", ["chatId"]),
-
-  chatFiles: defineTable({
-    chatId: v.id("chats"),
-    storageId: v.id("_storage"),
-    fileName: v.string(),
-    fileType: v.string(),
-    fileSize: v.number(),
   }).index("by_chat", ["chatId"]),
 
   documents: defineTable({

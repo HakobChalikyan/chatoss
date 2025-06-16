@@ -1,4 +1,8 @@
-import { Id } from "@/convex/_generated/dataModel";
+"use client";
+
+import type React from "react";
+
+import type { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { Markdown } from "../markdown";
 import { PreviewAttachment } from "../preview-attachment";
@@ -23,6 +27,8 @@ import {
   RotateCcw,
   Sparkles,
   MessageSquare,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 interface MessageProps {
@@ -30,8 +36,10 @@ interface MessageProps {
     _id: Id<"messages">;
     role: "user" | "assistant";
     content: string;
+    reasoning?: string;
     _creationTime: number;
     isStreaming?: boolean;
+    model: string;
     files?: Array<{
       id: Id<"_storage">;
       url: string | null;
@@ -47,22 +55,21 @@ interface MessageProps {
 }
 
 const StreamingIndicator = () => (
-  <div className="flex items-center gap-2 text-gray-400">
+  <div className="flex items-center justify-center">
     <div className="flex space-x-1">
       <div
-        className="w-1.5 h-1.5 bg-current rounded-full animate-bounce"
+        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
         style={{ animationDelay: "0ms" }}
       ></div>
       <div
-        className="w-1.5 h-1.5 bg-current rounded-full animate-bounce"
+        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
         style={{ animationDelay: "150ms" }}
       ></div>
       <div
-        className="w-1.5 h-1.5 bg-current rounded-full animate-bounce"
+        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
         style={{ animationDelay: "300ms" }}
       ></div>
     </div>
-    <span className="text-xs font-medium">AI is thinking...</span>
   </div>
 );
 
@@ -78,6 +85,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
   const [editedContent, setEditedContent] = useState(message.content);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const createBranchedChat = useMutation(api.chats.createBranchedChat);
@@ -103,7 +111,6 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
   const handleEdit = () => {
     setIsEditing(true);
     setEditedContent(message.content);
-    setIsExpanded(true);
   };
 
   const handleEditConfirm = (branch: boolean) => {
@@ -119,7 +126,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
           branchedFromMessageId: message._id,
           editedContent: "",
           fileIds: undefined,
-          model: currentChat?.model || "default",
+          model: message.model,
         });
         router.push(`/chat/${newChatId}`);
       } catch (error) {
@@ -143,7 +150,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
               message.files && message.files.length > 0
                 ? message.files.map((f) => f.id)
                 : undefined,
-            model: currentChat?.model || "default",
+            model: message.model,
           });
           router.push(`/chat/${newChatId}`);
         } else {
@@ -156,6 +163,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
               message.files && message.files.length > 0
                 ? message.files.map((f) => f.id)
                 : undefined,
+            model: message.model,
           });
         }
       } catch (error) {
@@ -164,7 +172,6 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
     }
 
     setIsEditing(false);
-    setIsExpanded(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -193,7 +200,6 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
   const cancelEdit = () => {
     setIsEditing(false);
     setEditedContent(message.content);
-    setIsExpanded(false);
   };
 
   const renderMessageFiles = (files: MessageProps["message"]["files"]) => {
@@ -276,7 +282,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
         className={cn(
           "flex flex-col max-w-3xl mx-auto transition-all duration-200",
           message.role === "user" ? "items-end" : "items-start",
-          isExpanded && "max-w-4xl",
+          isEditing && "max-w-4xl", // Only expand during editing, not reasoning expansion
         )}
       >
         <div
@@ -342,6 +348,54 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
             </div>
           ) : (
             <>
+              {message.reasoning && (
+                <div className="mt-4 mb-3">
+                  <button
+                    onClick={() => setIsReasoningExpanded(!isReasoningExpanded)}
+                    className={cn(
+                      "w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200",
+                      "bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100",
+                      "border border-amber-200 hover:border-amber-300",
+                      "group",
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-full bg-amber-200 group-hover:bg-amber-300 transition-colors">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+                      </div>
+                      <span className="text-sm font-semibold text-amber-800">
+                        AI Reasoning
+                      </span>
+                      <span className="text-xs text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">
+                        {isReasoningExpanded ? "Hide" : "Show"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {isReasoningExpanded ? (
+                        <ChevronUp className="w-4 h-4 text-amber-600 group-hover:text-amber-700 transition-colors" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-amber-600 group-hover:text-amber-700 transition-colors" />
+                      )}
+                    </div>
+                  </button>
+
+                  {isReasoningExpanded && (
+                    <div className="mt-3 p-4 bg-gradient-to-br from-slate-50 to-gray-50 rounded-lg border border-slate-200 shadow-sm">
+                      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200">
+                        <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                        <span className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                          Thought Process
+                        </span>
+                      </div>
+                      <div className="prose prose-sm prose-slate max-w-none">
+                        <div className="text-slate-700 leading-relaxed">
+                          <Markdown>{message.reasoning}</Markdown>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="prose prose-sm max-w-none">
                 <Markdown>
                   {isCancelled
@@ -376,6 +430,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
                           : "bg-blue-100 text-blue-700 hover:bg-blue-200 hover:shadow-sm border border-blue-200 hover:border-blue-300",
                         "flex items-center gap-1",
                       )}
+                      rel="noreferrer"
                     >
                       <MessageSquare className="w-3 h-3" />
                       {branch.title}
