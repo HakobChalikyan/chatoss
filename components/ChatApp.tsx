@@ -17,7 +17,7 @@ export function ChatApp({ initialChatId }: ChatAppProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const chats = useQuery(api.chats.getUserChats, { searchQuery }) || [];
+  const chats = useQuery(api.chats.getUserChats, { searchQuery });
 
   const handleSelectChat = (chatId: Id<"chats"> | null) => {
     if (chatId) {
