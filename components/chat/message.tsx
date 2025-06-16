@@ -40,13 +40,6 @@ interface MessageProps {
     _creationTime: number;
     isStreaming?: boolean;
     model: string;
-    parts?: Array<{
-      type: "text" | "image_url";
-      text?: string;
-      image_url?: {
-        url: string;
-      };
-    }>;
     files?: Array<{
       id: Id<"_storage">;
       url: string | null;
@@ -62,22 +55,21 @@ interface MessageProps {
 }
 
 const StreamingIndicator = () => (
-  <div className="flex items-center gap-2 text-gray-400">
+  <div className="flex items-center justify-center">
     <div className="flex space-x-1">
       <div
-        className="w-1.5 h-1.5 bg-current rounded-full animate-bounce"
+        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
         style={{ animationDelay: "0ms" }}
       ></div>
       <div
-        className="w-1.5 h-1.5 bg-current rounded-full animate-bounce"
+        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
         style={{ animationDelay: "150ms" }}
       ></div>
       <div
-        className="w-1.5 h-1.5 bg-current rounded-full animate-bounce"
+        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
         style={{ animationDelay: "300ms" }}
       ></div>
     </div>
-    <span className="text-xs font-medium">AI is thinking...</span>
   </div>
 );
 
@@ -92,12 +84,14 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(message.content);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const createBranchedChat = useMutation(api.chats.createBranchedChat);
   const deleteMessage = useMutation(api.chats.deleteMessage);
   const sendMessage = useMutation(api.chats.sendMessage);
+  const currentChat = useQuery(api.chats.getChat, { chatId });
   const router = useRouter();
 
   // Auto-resize textarea and focus when editing starts
@@ -192,6 +186,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
     } else if (e.key === "Escape") {
       setIsEditing(false);
       setEditedContent(message.content);
+      setIsExpanded(false);
     }
   };
 
@@ -211,7 +206,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
     if (!files || files.length === 0) return null;
 
     return (
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="mt-3 space-y-2">
         {files.map((file, index) => (
           <PreviewAttachment
             key={index}
@@ -402,31 +397,11 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
                 </div>
               )}
               <div className="prose prose-sm max-w-none">
-                {message.parts ? (
-                  <div className="space-y-4">
-                    {message.parts.map((part, index) => {
-                      if (part.type === "text") {
-                        return (
-                          <Markdown key={index}>
-                            {isCancelled
-                              ? (part.text || "").replace(
-                                  "*Response was cancelled*",
-                                  "",
-                                )
-                              : part.text || ""}
-                          </Markdown>
-                        );
-                      }
-                      return null;
-                    })}
-                  </div>
-                ) : (
-                  <Markdown>
-                    {isCancelled
-                      ? message.content.replace("*Response was cancelled*", "")
-                      : message.content}
-                  </Markdown>
-                )}
+                <Markdown>
+                  {isCancelled
+                    ? message.content.replace("*Response was cancelled*", "")
+                    : message.content}
+                </Markdown>
               </div>
               {renderMessageFiles(message.files)}
 
