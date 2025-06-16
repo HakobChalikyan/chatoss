@@ -43,7 +43,6 @@ export function ChatInterface({
     Array<{ file: File }>
   >([]);
   const [isUploading, setIsUploading] = React.useState(false);
-  const [isNewChat, setIsNewChat] = React.useState(true);
   const [isCreating, setIsCreating] = React.useState(false);
   const { isAtBottom, scrollToBottom } = useScrollToBottom();
 
@@ -61,21 +60,13 @@ export function ChatInterface({
       : "skip",
   );
 
+  let isNewChat = conversationId === undefined ? true : false;
+
   // Check if there's a streaming message
   const isStreaming = React.useMemo(() => {
     if (!chat?.messages) return false;
     return chat.messages.some((message) => message.isStreaming);
   }, [chat?.messages]);
-
-  // Reset state when conversation changes
-  React.useEffect(() => {
-    if (conversationId === undefined) {
-      setIsNewChat(true);
-      setUploadedFiles([]);
-    } else {
-      setIsNewChat(false);
-    }
-  }, [conversationId]);
 
   const handleFileUpload = async (files: FileList) => {
     if (files.length === 0) return;
@@ -153,7 +144,6 @@ export function ChatInterface({
         }
 
         onChatCreated?.(chatId);
-        setIsNewChat(false);
       } catch (error) {
         toast.error("Failed to create chat");
       } finally {

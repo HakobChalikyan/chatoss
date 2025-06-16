@@ -42,10 +42,8 @@ export function ChatApp({ initialChatId }: ChatAppProps) {
         onSearchChange={setSearchQuery}
       />
 
-      {/* Main chat area */}
       <SidebarInset>
         <ChatInterface
-          // Pass the chatId directly from the URL props
           conversationId={initialChatId}
           onChatCreated={handleNewChat}
         />
