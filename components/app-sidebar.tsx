@@ -141,7 +141,6 @@ export function AppSidebar({
                             {chat.title}
                           </h3>
                         </div>
-
                         <button
                           onClick={(e) => handleDeleteChat(chat._id, e)}
                           disabled={deletingChatId === chat._id}
