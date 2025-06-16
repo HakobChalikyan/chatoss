@@ -288,7 +288,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
             "rounded-xl px-4 py-3 relative group shadow-sm transition-all duration-200",
             message.role === "user"
               ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white"
-              : "bg-white border border-gray-200 text-gray-800 hover:shadow-md",
+              : "bg-white border border-gray-200 text-gray-800 hover:shadow-md w-full",
             isEditing && "ring-2 ring-blue-300 shadow-lg",
           )}
         >
