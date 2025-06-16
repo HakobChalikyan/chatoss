@@ -8,7 +8,9 @@ interface MessagesProps {
     _id: Id<"messages">;
     role: "user" | "assistant";
     content: string;
+    reasoning?: string;
     _creationTime: number;
+    model: string;
     isStreaming?: boolean;
     files?: Array<{
       id: Id<"_storage">;

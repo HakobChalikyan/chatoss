@@ -197,6 +197,7 @@ export const generateAIResponseStreaming = internalAction({
     }));
 
     let fullContent = "";
+    let fullReasoning = "";
 
     // Create a placeholder message for streaming
     const messageId = await ctx.runMutation(
@@ -249,6 +250,9 @@ export const generateAIResponseStreaming = internalAction({
             model: args.model,
             messages: openaiMessages,
             stream: true,
+            reasoning: {
+              enabled: true,
+            },
           }),
           signal: controller.signal,
         },
@@ -290,11 +294,20 @@ export const generateAIResponseStreaming = internalAction({
             try {
               const parsed = JSON.parse(data);
               const content = parsed.choices[0]?.delta?.content || "";
+              const reasoning = parsed.choices[0]?.delta?.reasoning || "";
+
               if (content) {
                 fullContent += content;
+              }
+              if (reasoning) {
+                fullReasoning += reasoning;
+              }
+
+              if (content || reasoning) {
                 await ctx.runMutation(internal.chats.updateStreamingMessage, {
                   messageId,
                   content: fullContent,
+                  reasoning: fullReasoning,
                   isComplete: false,
                 });
               }
@@ -309,6 +322,7 @@ export const generateAIResponseStreaming = internalAction({
       await ctx.runMutation(internal.chats.updateStreamingMessage, {
         messageId,
         content: fullContent,
+        reasoning: fullReasoning,
         isComplete: true,
       });
 
@@ -322,6 +336,7 @@ export const generateAIResponseStreaming = internalAction({
         await ctx.runMutation(internal.chats.updateStreamingMessage, {
           messageId,
           content: fullContent + "\n\n*Response was cancelled*",
+          reasoning: fullReasoning,
           isComplete: true,
         });
       } else if (
@@ -331,6 +346,7 @@ export const generateAIResponseStreaming = internalAction({
         await ctx.runMutation(internal.chats.updateStreamingMessage, {
           messageId,
           content: fullContent + "\n\n*Response was cancelled*",
+          reasoning: fullReasoning,
           isComplete: true,
         });
       } else {
@@ -356,6 +372,7 @@ export const createStreamingMessage = internalMutation({
       chatId: args.chatId,
       role: "assistant",
       content: "",
+      reasoning: "",
       model: args.model,
       isStreaming: true,
     });
@@ -372,11 +389,13 @@ export const updateStreamingMessage = internalMutation({
   args: {
     messageId: v.id("messages"),
     content: v.string(),
+    reasoning: v.optional(v.string()),
     isComplete: v.boolean(),
   },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.messageId, {
       content: args.content,
+      reasoning: args.reasoning,
       isStreaming: !args.isComplete,
     });
   },

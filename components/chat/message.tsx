@@ -23,6 +23,8 @@ import {
   RotateCcw,
   Sparkles,
   MessageSquare,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 interface MessageProps {
@@ -30,8 +32,10 @@ interface MessageProps {
     _id: Id<"messages">;
     role: "user" | "assistant";
     content: string;
+    reasoning?: string;
     _creationTime: number;
     isStreaming?: boolean;
+    model: string;
     files?: Array<{
       id: Id<"_storage">;
       url: string | null;
@@ -78,6 +82,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
   const [editedContent, setEditedContent] = useState(message.content);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const createBranchedChat = useMutation(api.chats.createBranchedChat);
@@ -119,7 +124,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
           branchedFromMessageId: message._id,
           editedContent: "",
           fileIds: undefined,
-          model: currentChat?.model || "default",
+          model: message.model,
         });
         router.push(`/chat/${newChatId}`);
       } catch (error) {
@@ -143,7 +148,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
               message.files && message.files.length > 0
                 ? message.files.map((f) => f.id)
                 : undefined,
-            model: currentChat?.model || "default",
+            model: message.model,
           });
           router.push(`/chat/${newChatId}`);
         } else {
@@ -156,6 +161,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
               message.files && message.files.length > 0
                 ? message.files.map((f) => f.id)
                 : undefined,
+            model: message.model,
           });
         }
       } catch (error) {
@@ -342,6 +348,26 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
             </div>
           ) : (
             <>
+              {message.reasoning && (
+                <div className="mt-3 pt-3 border-y border-gray-200">
+                  <button
+                    onClick={() => setIsReasoningExpanded(!isReasoningExpanded)}
+                    className="w-full flex items-center justify-between text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    <span>Reasoning</span>
+                    {isReasoningExpanded ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
+                  </button>
+                  {isReasoningExpanded && (
+                    <div className="mt-2 prose prose-sm max-w-none text-gray-600">
+                      <Markdown>{message.reasoning}</Markdown>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="prose prose-sm max-w-none">
                 <Markdown>
                   {isCancelled

@@ -40,6 +40,7 @@ export default defineSchema({
     chatId: v.id("chats"),
     role: v.union(v.literal("user"), v.literal("assistant")),
     content: v.string(),
+    reasoning: v.optional(v.string()),
     model: v.string(),
     fileIds: v.optional(v.array(v.id("_storage"))),
     isStreaming: v.optional(v.boolean()),
