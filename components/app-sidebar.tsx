@@ -24,7 +24,6 @@ import { Skeleton } from "./ui/skeleton";
 interface Chat {
   _id: Id<"chats">;
   title: string;
-  model: string;
   lastMessageAt: number;
   parentChatId?: Id<"chats">;
 }

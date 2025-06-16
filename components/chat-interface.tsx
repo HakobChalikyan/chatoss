@@ -19,6 +19,7 @@ interface Message {
   _id: Id<"messages">;
   role: "user" | "assistant";
   content: string;
+  model: string;
   _creationTime: number;
   isStreaming?: boolean;
   files?: Array<{
@@ -104,8 +105,8 @@ export function ChatInterface({
         // First create the chat
         const chatId = await createChat({
           title: input.trim().slice(0, 50) + (input.length > 50 ? "..." : ""),
-          model: selectedModel.id,
           initialMessage: input.trim(),
+          model: selectedModel.id,
         });
 
         // Then upload files and save them to the chat
@@ -140,6 +141,7 @@ export function ChatInterface({
             chatId,
             content: input.trim() || "📎 Files attached",
             fileIds,
+            model: selectedModel.id,
           });
         }
 
@@ -185,6 +187,7 @@ export function ChatInterface({
           chatId: conversationId as Id<"chats">,
           content: messageText,
           fileIds: fileIds.length > 0 ? fileIds : undefined,
+          model: selectedModel.id,
         });
       } catch (error) {
         toast.error("Failed to send message");

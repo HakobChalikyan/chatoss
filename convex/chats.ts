@@ -12,8 +12,8 @@ import { api, internal } from "./_generated/api";
 export const createChat = mutation({
   args: {
     title: v.string(),
-    model: v.string(),
     initialMessage: v.string(),
+    model: v.string(),
     fileIds: v.optional(v.array(v.id("_storage"))),
   },
   handler: async (ctx, args) => {
@@ -23,7 +23,6 @@ export const createChat = mutation({
     const chatId = await ctx.db.insert("chats", {
       userId,
       title: args.title,
-      model: args.model,
       lastMessageAt: Date.now(),
     });
 
@@ -31,6 +30,7 @@ export const createChat = mutation({
       chatId,
       role: "user",
       content: args.initialMessage,
+      model: args.model,
       fileIds: args.fileIds,
     });
 
@@ -82,7 +82,6 @@ export const createBranchedChat = mutation({
     const newChatId = await ctx.db.insert("chats", {
       userId,
       title: `Branched: ${parentChat.title}`,
-      model: args.model,
       lastMessageAt: Date.now(),
       parentChatId: args.parentChatId,
       branchedFromMessageId: args.branchedFromMessageId,
@@ -100,6 +99,7 @@ export const createBranchedChat = mutation({
         chatId: newChatId,
         role: message.role,
         content: message.content,
+        model: message.model,
         fileIds: message.fileIds,
         isStreaming: message.isStreaming || false,
       });
@@ -118,6 +118,7 @@ export const createBranchedChat = mutation({
         chatId: newChatId,
         role: "user",
         content: args.editedContent,
+        model: args.model,
         fileIds: args.fileIds,
       });
 
@@ -141,6 +142,7 @@ export const sendMessage = mutation({
   args: {
     chatId: v.id("chats"),
     content: v.string(),
+    model: v.string(),
     fileIds: v.optional(v.array(v.id("_storage"))),
   },
   handler: async (ctx, args) => {
@@ -156,6 +158,7 @@ export const sendMessage = mutation({
       chatId: args.chatId,
       role: "user",
       content: args.content,
+      model: args.model,
       fileIds: args.fileIds,
     });
 
@@ -169,7 +172,7 @@ export const sendMessage = mutation({
       {
         userId,
         chatId: args.chatId,
-        model: chat.model,
+        model: args.model,
       },
     );
 
@@ -200,6 +203,7 @@ export const generateAIResponseStreaming = internalAction({
       internal.chats.createStreamingMessage,
       {
         chatId: args.chatId,
+        model: args.model,
       },
     );
 
@@ -333,6 +337,7 @@ export const generateAIResponseStreaming = internalAction({
         console.error("AI response error:", error);
         await ctx.runMutation(internal.chats.addAIMessage, {
           chatId: args.chatId,
+          model: args.model,
           content:
             "I apologize, but I encountered an error generating a response. Please try again.",
         });
@@ -344,12 +349,14 @@ export const generateAIResponseStreaming = internalAction({
 export const createStreamingMessage = internalMutation({
   args: {
     chatId: v.id("chats"),
+    model: v.string(),
   },
   handler: async (ctx, args) => {
     const messageId = await ctx.db.insert("messages", {
       chatId: args.chatId,
       role: "assistant",
       content: "",
+      model: args.model,
       isStreaming: true,
     });
 
@@ -388,6 +395,7 @@ export const getChatMessages = internalQuery({
 export const addAIMessage = internalMutation({
   args: {
     chatId: v.id("chats"),
+    model: v.string(),
     content: v.string(),
   },
   handler: async (ctx, args) => {
@@ -395,6 +403,7 @@ export const addAIMessage = internalMutation({
       chatId: args.chatId,
       role: "assistant",
       content: args.content,
+      model: args.model,
     });
 
     await ctx.db.patch(args.chatId, {
