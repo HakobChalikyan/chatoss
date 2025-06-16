@@ -36,6 +36,22 @@ export function ChatInput({
   onModelSelect,
 }: ChatInputProps) {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [fileUrls, setFileUrls] = React.useState<Record<number, string>>({});
+
+  // Create and cleanup object URLs
+  React.useEffect(() => {
+    const urls: Record<number, string> = {};
+    uploadedFiles.forEach((file, index) => {
+      urls[index] = URL.createObjectURL(file.file);
+    });
+
+    setFileUrls(urls);
+
+    // Cleanup function
+    return () => {
+      Object.values(urls).forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [uploadedFiles]);
 
   return (
     <div className="relative">
@@ -48,7 +64,7 @@ export function ChatInput({
                 <PreviewAttachment
                   key={index}
                   attachment={{
-                    url: URL.createObjectURL(file.file),
+                    url: fileUrls[index] || "",
                     name: file.file.name,
                     contentType: file.file.type,
                   }}
