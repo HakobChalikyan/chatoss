@@ -14,6 +14,14 @@ import { Messages } from "./chat/messages";
 import { ChatInput } from "./chat/chat-input";
 import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
 import { AI_MODELS } from "@/lib/ai-models";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"; // Import Dialog components
+import { ApiKeyForm } from "@/app/settings/api-key-form";
 
 interface ChatInterfaceProps {
   conversationId?: Id<"chats"> | undefined;
@@ -31,6 +39,7 @@ export function ChatInterface({
   >([]);
   const [isUploading, setIsUploading] = React.useState(false);
   const [isCreating, setIsCreating] = React.useState(false);
+  const [showApiKeyDialog, setShowApiKeyDialog] = React.useState(false); // State for dialog visibility
   const { isAtBottom, scrollToBottom } = useScrollToBottom();
 
   const { isMobile, state } = useSidebar();
@@ -45,6 +54,7 @@ export function ChatInterface({
       ? { chatId: conversationId as Id<"chats"> }
       : "skip",
   );
+  const existingKey = useQuery(api.apiKeys.getApiKey, { userId: undefined });
 
   let isNewChat = conversationId === undefined ? true : false;
 
@@ -82,6 +92,12 @@ export function ChatInterface({
 
   const handleSubmit = async (e: React.FormEvent | React.KeyboardEvent) => {
     e.preventDefault();
+
+    if (existingKey === null) {
+      setShowApiKeyDialog(true);
+      return;
+    }
+
     if (!input.trim() && uploadedFiles.length === 0) return;
 
     if (isNewChat) {
@@ -298,6 +314,19 @@ export function ChatInterface({
           />
         </div>
       </div>
+
+      <Dialog open={showApiKeyDialog} onOpenChange={setShowApiKeyDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>API Key Required</DialogTitle>
+            <DialogDescription>
+              To use the chat functionality, you need to provide an API key. You
+              can either enter it below or go to settings.
+            </DialogDescription>
+          </DialogHeader>
+          <ApiKeyForm/>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

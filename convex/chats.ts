@@ -296,7 +296,7 @@ export const generateAIResponseStreaming = internalAction({
       });
 
       if (!apiKeyData?.apiKey) {
-        throw new Error("No API key found for this model");
+        throw new Error("No API key found");
       }
 
       const controller = new AbortController();
@@ -432,11 +432,10 @@ export const generateAIResponseStreaming = internalAction({
         });
       } else {
         console.error("AI response error:", error);
-        await ctx.runMutation(internal.chats.addAIMessage, {
-          chatId: args.chatId,
-          model: args.model,
-          content:
-            "I apologize, but I encountered an error generating a response. Please try again.",
+        await ctx.runMutation(internal.chats.updateStreamingMessage, {
+          messageId,
+          content: "I apologize, but I encountered an error generating a response. Please try again." + "\n\n" + error,
+          isComplete: true,
         });
       }
     }
