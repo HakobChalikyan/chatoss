@@ -84,13 +84,12 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(message.content);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
   const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const createBranchedChat = useMutation(api.chats.createBranchedChat);
-  const deleteMessage = useMutation(api.chats.deleteMessage);
-  const sendMessage = useMutation(api.chats.sendMessage);
+  const deleteMessage = useMutation(api.messages.deleteMessage);
+  const sendMessage = useMutation(api.messages.sendMessage);
   const currentChat = useQuery(api.chats.getChat, { chatId });
   const router = useRouter();
 
@@ -186,7 +185,6 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
     } else if (e.key === "Escape") {
       setIsEditing(false);
       setEditedContent(message.content);
-      setIsExpanded(false);
     }
   };
 

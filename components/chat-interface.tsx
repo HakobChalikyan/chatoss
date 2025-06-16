@@ -45,9 +45,9 @@ export function ChatInterface({
   const { isMobile, state } = useSidebar();
 
   const createChat = useMutation(api.chats.createChat);
-  const sendMessage = useMutation(api.chats.sendMessage);
-  const generateUploadUrl = useMutation(api.chats.generateUploadUrl);
-  const cancelStream = useMutation(api.chats.cancelStream);
+  const sendMessage = useMutation(api.messages.sendMessage);
+  const generateUploadUrl = useMutation(api.messages.generateUploadUrl);
+  const cancelStream = useMutation(api.messages.cancelStream);
   const chat = useQuery(
     api.chats.getChat,
     conversationId !== undefined
