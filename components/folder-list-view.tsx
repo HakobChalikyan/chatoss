@@ -14,6 +14,7 @@ import { ConfirmationDialog } from "./confirmation-dialog";
 import { EmptyState } from "./empty-state";
 import { FolderItem } from "./folder-item";
 import { SidebarChat } from "./sidebar-chat";
+import { cn } from "@/lib/utils";
 
 interface Chat {
   _id: Id<"chats">;
@@ -62,6 +63,9 @@ export function FolderListView({
     folderId: Id<"folders"> | null;
     folderName: string;
   }>({ isOpen: false, folderId: null, folderName: "" });
+  const [draggedChat, setDraggedChat] = useState<Chat | null>(null);
+  const [dropTargetFolderId, setDropTargetFolderId] =
+    useState<Id<"folders"> | null>(null);
 
   const { expandedFolders, toggleFolder, expandFolder } = useFolderExpansion();
   const { filteredChats, filteredFolders } = useFolderSearch(
@@ -73,6 +77,7 @@ export function FolderListView({
   const createFolder = useMutation(api.folders.createFolder);
   const updateFolder = useMutation(api.folders.updateFolder);
   const deleteFolder = useMutation(api.folders.deleteFolder);
+  const moveChatToFolder = useMutation(api.folders.moveChatToFolder);
 
   const handleCreateFolder = useCallback(
     async (parentId?: Id<"folders">, name?: string) => {
@@ -159,6 +164,36 @@ export function FolderListView({
     [getChatsByFolder],
   );
 
+  const handleDragStart = (e: React.DragEvent, chat: Chat) => {
+    setDraggedChat(chat);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedChat(null);
+    setDropTargetFolderId(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = async (e: React.DragEvent, folderId: Id<"folders">) => {
+    e.preventDefault();
+    if (!draggedChat) return;
+
+    try {
+      await moveChatToFolder({ chatId: draggedChat._id, folderId });
+      // Expand the target folder to show the moved chat
+      expandFolder(folderId);
+    } catch (error) {
+      console.error("Failed to move chat:", error);
+    }
+
+    setDraggedChat(null);
+    setDropTargetFolderId(null);
+  };
+
   const renderChats = useCallback(
     (folderId: Id<"folders"> | undefined, level = 0) => {
       const folderChats = getChatsByFolder(folderId);
@@ -180,6 +215,8 @@ export function FolderListView({
               handleTogglePin={handleTogglePin}
               handleRenameChat={handleRenameChat}
               level={level}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
             />
           ))}
         </div>
@@ -193,6 +230,8 @@ export function FolderListView({
       handleTogglePin,
       handleRenameChat,
       getChatsByFolder,
+      handleDragStart,
+      handleDragEnd,
     ],
   );
 
@@ -202,6 +241,7 @@ export function FolderListView({
         filteredFolders?.filter((f) => f.parentFolderId === folder._id) || [];
       const isExpanded = expandedFolders.has(folder._id);
       const chatCount = getFolderChatCount(folder._id);
+      const isDropTarget = dropTargetFolderId === folder._id;
 
       return (
         <FolderItem
@@ -214,6 +254,10 @@ export function FolderListView({
           onDelete={() => confirmDeleteFolder(folder._id, folder.name)}
           onCreateSubfolder={(name) => handleCreateFolder(folder._id, name)}
           chatCount={chatCount}
+          isDropTarget={isDropTarget}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={() => setDropTargetFolderId(null)}
         >
           {isExpanded && (
             <>
@@ -235,6 +279,9 @@ export function FolderListView({
       confirmDeleteFolder,
       renderChats,
       handleCreateFolder,
+      dropTargetFolderId,
+      handleDrop,
+      handleDragOver,
     ],
   );
 
@@ -318,7 +365,30 @@ export function FolderListView({
             {rootFolders.map((folder) => renderFolder(folder))}
 
             {uncategorizedChats.length > 0 && (
-              <div className="space-y-2">
+              <div
+                className={cn(
+                  "space-y-2",
+                  dropTargetFolderId === null &&
+                    draggedChat &&
+                    "bg-primary/5 rounded-lg p-2 border-2 border-dashed border-primary/30",
+                )}
+                onDragOver={handleDragOver}
+                onDragLeave={() => setDropTargetFolderId(null)}
+                onDrop={async (e) => {
+                  e.preventDefault();
+                  if (!draggedChat) return;
+                  try {
+                    await moveChatToFolder({
+                      chatId: draggedChat._id,
+                      folderId: undefined,
+                    });
+                  } catch (error) {
+                    console.error("Failed to move chat:", error);
+                  }
+                  setDraggedChat(null);
+                  setDropTargetFolderId(null);
+                }}
+              >
                 <div className="flex items-center justify-between px-2 py-1">
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {searchQuery ? "Matching Chats" : "Uncategorized"}

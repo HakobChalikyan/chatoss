@@ -42,6 +42,9 @@ interface FolderItemProps {
   children?: React.ReactNode;
   chatCount?: number;
   isDropTarget?: boolean;
+  onDrop?: (e: React.DragEvent, folderId: Id<"folders">) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDragLeave?: (e: React.DragEvent) => void;
 }
 
 export function FolderItem({
@@ -55,11 +58,15 @@ export function FolderItem({
   children,
   chatCount = 0,
   isDropTarget = false,
+  onDrop,
+  onDragOver,
+  onDragLeave,
 }: FolderItemProps) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState(folder.name);
   const [isCreatingSubfolder, setIsCreatingSubfolder] = useState(false);
   const [subfolderName, setSubfolderName] = useState("");
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const subfolderInputRef = useRef<HTMLInputElement>(null);
 
@@ -152,17 +159,47 @@ export function FolderItem({
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(true);
+    if (onDragOver) {
+      onDragOver(e);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+    if (onDragLeave) {
+      onDragLeave(e);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+    if (onDrop) {
+      onDrop(e, folder._id);
+    }
+  };
+
   return (
     <div className="group">
       <div
         className={cn(
           "flex items-center gap-2 py-2 px-2 rounded-lg transition-all duration-200 hover:bg-muted/50",
-          isDropTarget &&
+          (isDropTarget || isDraggingOver) &&
             "bg-primary/10 border-2 border-dashed border-primary/30",
           level > 0 && "ml-6",
           isRenaming && "ring-2 ring-neutral-400/50",
         )}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
         <Button
           variant="ghost"

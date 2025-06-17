@@ -34,6 +34,8 @@ interface SidebarChatProps {
   handleTogglePin: (chatId: Id<"chats">, e: React.MouseEvent) => Promise<void>;
   handleRenameChat: (chatId: Id<"chats">, newTitle: string) => Promise<void>;
   level?: number;
+  onDragStart?: (e: React.DragEvent, chat: Chat) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
 }
 
 export function SidebarChat({
@@ -45,6 +47,8 @@ export function SidebarChat({
   handleTogglePin,
   handleRenameChat,
   level = 0,
+  onDragStart,
+  onDragEnd,
 }: SidebarChatProps) {
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean;
@@ -115,12 +119,32 @@ export function SidebarChat({
     }
   };
 
+  const handleDragStart = (e: React.DragEvent) => {
+    if (onDragStart) {
+      onDragStart(e, chat);
+    }
+    e.dataTransfer.setData(
+      "application/json",
+      JSON.stringify({ type: "chat", id: chat._id }),
+    );
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    if (onDragEnd) {
+      onDragEnd(e);
+    }
+  };
+
   return (
     <TooltipProvider>
       <FolderContextMenu chatId={chat._id} currentFolderId={chat.folderId}>
         <div
           key={chat._id}
           onClick={handleChatClick}
+          draggable
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
           className={cn(
             "group/chat items-center relative px-2 py-1 rounded-lg cursor-pointer mb-2 transition-all duration-200",
             selectedChatId === chat._id
