@@ -204,7 +204,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
     if (!files || files.length === 0) return null;
 
     return (
-      <div className="mt-3 space-y-2">
+      <div className="flex flex-wrap mt-3 gap-2">
         {files.map((file, index) => (
           <PreviewAttachment
             key={index}
