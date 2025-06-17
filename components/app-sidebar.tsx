@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { ChatListView } from "./chat-list-view";
 import { FolderListView } from "./folder-list-view";
+import { useViewPreference } from "@/hooks/use-view-preference";
 
 interface Chat {
   _id: Id<"chats">;
@@ -56,6 +57,7 @@ export function AppSidebar({
   const [deletingChatId, setDeletingChatId] = useState<Id<"chats"> | null>(
     null,
   );
+  const { view, updateView } = useViewPreference();
   const deleteChat = useMutation(api.chats.deleteChat);
   const togglePinChat = useMutation(api.chats.togglePinChat);
   const updateChatTitle = useMutation(api.chats.updateChatTitle);
@@ -139,7 +141,11 @@ export function AppSidebar({
       </SidebarHeader>
 
       <SidebarContent className="px-2">
-        <Tabs defaultValue="chats" className="w-full">
+        <Tabs
+          value={view}
+          onValueChange={(value) => updateView(value as "chats" | "folders")}
+          className="w-full"
+        >
           <TabsList className="w-full">
             <TabsTrigger value="chats" className="flex-1">
               Chats
