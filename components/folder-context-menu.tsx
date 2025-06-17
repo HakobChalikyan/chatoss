@@ -42,14 +42,18 @@ export function FolderContextMenu({
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-56">
-        <ContextMenuItem
-          onClick={() => handleMoveToFolder(undefined)}
-          className="flex items-center gap-2"
-        >
-          <FolderMinus className="h-4 w-4" />
-          Remove from folder
-        </ContextMenuItem>
-        <ContextMenuSeparator />
+        {currentFolderId && (
+          <>
+            <ContextMenuItem
+              onClick={() => handleMoveToFolder(undefined)}
+              className="flex items-center gap-2"
+            >
+              <FolderMinus className="h-4 w-4" />
+              Remove from folder
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+          </>
+        )}
         {folders?.map((folder) => (
           <ContextMenuItem
             key={folder._id}
