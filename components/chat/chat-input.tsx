@@ -107,7 +107,7 @@ export function ChatInput({
                 onChange={(e) => e.target.files && onFileUpload(e.target.files)}
                 multiple
                 className="hidden"
-                accept="image/*,.pdf,.doc,.docx,.txt"
+                accept="image/*"
               />
               <Button
                 type="button"
