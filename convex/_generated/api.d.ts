@@ -16,6 +16,7 @@ import type {
 import type * as apiKeys from "../apiKeys.js";
 import type * as auth from "../auth.js";
 import type * as chats from "../chats.js";
+import type * as folders from "../folders.js";
 import type * as http from "../http.js";
 import type * as messages from "../messages.js";
 import type * as myFunctions from "../myFunctions.js";
@@ -33,6 +34,7 @@ declare const fullApi: ApiFromModules<{
   apiKeys: typeof apiKeys;
   auth: typeof auth;
   chats: typeof chats;
+  folders: typeof folders;
   http: typeof http;
   messages: typeof messages;
   myFunctions: typeof myFunctions;
