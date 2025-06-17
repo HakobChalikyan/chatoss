@@ -234,7 +234,7 @@ export function ChatInterface({
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <h1 className="text-3xl font-bold gradient-text">
-                  Hey there, Hakob! 👋
+                  Hey there! 👋
                 </h1>
               </div>
               <p className="text-lg text-muted-foreground max-w-xl">
