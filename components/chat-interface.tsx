@@ -1,10 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { Sparkles, Code, BookOpen, Compass, ArrowDown } from "lucide-react";
+import { Sparkles, ArrowDown } from "lucide-react";
 import { useMutation, useQuery } from "convex/react";
 import { toast } from "sonner";
-import { Id } from "@/convex/_generated/dataModel";
+import type { Id } from "@/convex/_generated/dataModel";
 import { api } from "@/convex/_generated/api";
 
 import { cn } from "@/lib/utils";
@@ -14,13 +14,14 @@ import { Messages } from "./chat/messages";
 import { ChatInput } from "./chat/chat-input";
 import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
 import { AI_MODELS } from "@/lib/ai-models";
+import { categories, suggestedQuestions } from "@/lib/suggested-questions-data";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"; // Import Dialog components
+} from "@/components/ui/dialog";
 import { ApiKeyForm } from "@/app/settings/api-key-form";
 
 interface ChatInterfaceProps {
@@ -39,8 +40,13 @@ export function ChatInterface({
   >([]);
   const [isUploading, setIsUploading] = React.useState(false);
   const [isCreating, setIsCreating] = React.useState(false);
-  const [showApiKeyDialog, setShowApiKeyDialog] = React.useState(false); // State for dialog visibility
+  const [showApiKeyDialog, setShowApiKeyDialog] = React.useState(false);
+  const [chatInputHeight, setChatInputHeight] = React.useState(150);
+  const chatInputRef = React.useRef<HTMLDivElement>(null);
   const { isAtBottom, scrollToBottom } = useScrollToBottom();
+  const [selectedCategory, setSelectedCategory] = React.useState(
+    categories[0].id,
+  );
 
   const { isMobile, state } = useSidebar();
 
@@ -56,9 +62,8 @@ export function ChatInterface({
   );
   const existingKey = useQuery(api.apiKeys.getApiKey, { userId: undefined });
 
-  let isNewChat = conversationId === undefined ? true : false;
+  const isNewChat = conversationId === undefined ? true : false;
 
-  // Check if there's a streaming message
   const isStreaming = React.useMemo(() => {
     if (!chat?.messages) return false;
     return chat.messages.some((message) => message.isStreaming);
@@ -73,14 +78,11 @@ export function ChatInterface({
     try {
       for (const file of Array.from(files)) {
         if (file.size > 10 * 1024 * 1024) {
-          // 10MB limit
           toast.error(`File ${file.name} is too large (max 10MB)`);
           continue;
         }
-
         newFiles.push({ file });
       }
-
       setUploadedFiles((prev) => [...prev, ...newFiles]);
     } catch (error) {
       console.error("Upload error:", error);
@@ -103,7 +105,6 @@ export function ChatInterface({
     if (isNewChat) {
       setIsCreating(true);
       try {
-        // Upload files first if any
         const fileIds: Id<"_storage">[] = [];
         if (uploadedFiles.length > 0) {
           for (const { file } of uploadedFiles) {
@@ -123,7 +124,6 @@ export function ChatInterface({
           }
         }
 
-        // Create chat with files
         const chatId = await createChat({
           title: input.trim().slice(0, 50) + (input.length > 50 ? "..." : ""),
           initialMessage: input.trim() || "📎 Files attached",
@@ -142,7 +142,6 @@ export function ChatInterface({
         const messageText = input.trim() || "📎 Files attached";
         const fileIds: Id<"_storage">[] = [];
 
-        // Upload files if any
         if (uploadedFiles.length > 0) {
           for (const { file } of uploadedFiles) {
             const uploadUrl = await generateUploadUrl();
@@ -186,79 +185,125 @@ export function ChatInterface({
     }
   };
 
+  const suggestedQuestionsFiltered = React.useMemo(() => {
+    return suggestedQuestions.filter(
+      (question) => question.category === selectedCategory,
+    );
+  }, [selectedCategory]);
+
+  React.useEffect(() => {
+    const observeHeight = () => {
+      if (chatInputRef.current) {
+        const height = chatInputRef.current.offsetHeight;
+        setChatInputHeight(height + 8); // Add some padding
+      }
+    };
+
+    // Initial measurement
+    observeHeight();
+
+    // Create ResizeObserver to watch for height changes
+    const resizeObserver = new ResizeObserver(observeHeight);
+    if (chatInputRef.current) {
+      resizeObserver.observe(chatInputRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [uploadedFiles]);
+
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto p-10 pb-[150px]">
+    <div className="flex flex-col h-full relative">
+      {/* Enhanced background decoration for dark mode */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-gray-400/10 to-slate-400/10 dark:from-gray-600/20 dark:to-slate-600/20 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-stone-400/10 to-zinc-400/10 dark:from-stone-600/20 dark:to-zinc-600/20 rounded-full blur-3xl"></div>
+      </div>
+
+      <div
+        className="flex-1 overflow-y-auto p-10 relative z-10"
+        style={{ paddingBottom: `${chatInputHeight}px` }}
+      >
         {isNewChat ? (
           <div className="flex flex-col items-center justify-center h-full">
-            <h1 className="text-3xl font-bold mb-8">
-              How can I help you, Hakob?
-            </h1>
-
-            {/* Horizontal category buttons */}
-            <div className="flex gap-3 mb-12">
-              <Button
-                variant="outline"
-                className="px-6 py-3 flex items-center gap-2 rounded-full"
-              >
-                <Sparkles className="h-4 w-4" />
-                <span>Create</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="px-6 py-3 flex items-center gap-2 rounded-full"
-              >
-                <BookOpen className="h-4 w-4" />
-                <span>Explore</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="px-6 py-3 flex items-center gap-2 rounded-full"
-              >
-                <Code className="h-4 w-4" />
-                <span>Code</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="px-6 py-3 flex items-center gap-2 rounded-full"
-              >
-                <Compass className="h-4 w-4" />
-                <span>Learn</span>
-              </Button>
+            {/* Hero Section */}
+            <div className="text-center mb-6 space-y-2">
+              <div className="inline-flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-500 to-slate-600 dark:from-gray-400 dark:to-slate-500 flex items-center justify-center float">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <h1 className="text-3xl font-bold gradient-text">
+                  Hey there, Hakob! 👋
+                </h1>
+              </div>
+              <p className="text-lg text-muted-foreground max-w-xl">
+                Ready to explore, create, and discover? Let's dive into
+                something amazing together!
+              </p>
             </div>
 
-            {/* Suggested questions */}
-            <div className="space-y-4 w-full max-w-2xl">
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-left h-auto py-3"
-                onClick={() => setInput("How does AI work?")}
-              >
-                How does AI work?
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-left h-auto py-3"
-                onClick={() => setInput("Are black holes real?")}
-              >
-                Are black holes real?
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-left h-auto py-3"
-                onClick={() =>
-                  setInput('How many Rs are in the word "strawberry"?')
-                }
-              >
-                How many Rs are in the word "strawberry"?
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-left h-auto py-3"
-                onClick={() => setInput("What is the meaning of life?")}
-              >
-                What is the meaning of life?
-              </Button>
+            {/* Category buttons with enhanced dark mode styling */}
+            <div className="flex flex-wrap gap-3 mb-6 justify-center">
+              {categories.map((category, index) => (
+                <Button
+                  key={category.id}
+                  variant="outline"
+                  className={cn(
+                    "px-8 py-4 rounded-2xl border hover-lift glass",
+                    "bg-white/10 hover:bg-white/20 border-white/20 hover:border-white/30",
+                    "dark:bg-gray-800/30 dark:hover:bg-gray-700/40 dark:border-gray-600/30 dark:hover:border-gray-500/40",
+                    "backdrop-blur-sm transition-all duration-300",
+                    selectedCategory === category.id &&
+                      "bg-white/20 dark:bg-gray-700/40",
+                  )}
+                  style={{ animationDelay: `${index * 100}ms` }}
+                  onClick={() => setSelectedCategory(category.id)}
+                >
+                  <div
+                    className={cn(
+                      "w-5 h-5 rounded-lg bg-gradient-to-br flex items-center justify-center mr-3",
+                      category.color,
+                    )}
+                  >
+                    <category.icon className="h-3 w-3 text-white" />
+                  </div>
+                  <span className="font-semibold">{category.label}</span>
+                </Button>
+              ))}
+            </div>
+
+            {/* Enhanced suggested questions with better dark mode support */}
+            <div className="space-y-2 w-full max-w-2xl">
+              {suggestedQuestionsFiltered.map((question, index) => (
+                <Button
+                  key={index}
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-start text-left h-auto py-2 px-4 rounded-xl hover-lift",
+                    "glass bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20",
+                    "dark:bg-gray-800/20 dark:hover:bg-gray-700/30 dark:border-gray-600/20 dark:hover:border-gray-500/30",
+                    "transition-all duration-300",
+                  )}
+                  onClick={() => setInput(question.text)}
+                  style={{ animationDelay: `${(index + 4) * 100}ms` }}
+                >
+                  <div
+                    className={cn(
+                      "w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center mr-3",
+                      question.gradient,
+                    )}
+                  >
+                    <question.icon className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">{question.text}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Click to ask this question
+                    </p>
+                  </div>
+                </Button>
+              ))}
             </div>
           </div>
         ) : (
@@ -275,8 +320,9 @@ export function ChatInterface({
       </div>
 
       <div
+        ref={chatInputRef}
         className={cn(
-          "fixed bottom-0 bg-transparent",
+          "fixed bottom-0 bg-transparent z-20 px-4 max-w-4xl mx-auto transition-all duration-200 ease-linear",
           isMobile
             ? "left-0 right-0"
             : state === "expanded"
@@ -288,7 +334,11 @@ export function ChatInterface({
           <div className="flex justify-center mb-2">
             <Button
               data-testid="scroll-to-bottom-button"
-              className="rounded-full shadow-lg"
+              className={cn(
+                "rounded-full shadow-lg glass pulse-glow",
+                "bg-white/10 hover:bg-white/20 border border-white/20",
+                "dark:bg-gray-800/30 dark:hover:bg-gray-700/40 dark:border-gray-600/30",
+              )}
               size="icon"
               variant="outline"
               onClick={() => scrollToBottom("smooth")}
@@ -297,7 +347,13 @@ export function ChatInterface({
             </Button>
           </div>
         )}
-        <div className="p-4 pt-0 bg-white">
+        <div
+          className={cn(
+            "glass rounded-2xl rounded-b-none backdrop-blur-xl",
+            "bg-white/10 border border-white/20",
+            "dark:bg-gray-800/30 dark:border-gray-600/30",
+          )}
+        >
           <ChatInput
             input={input}
             onInputChange={setInput}
@@ -316,15 +372,23 @@ export function ChatInterface({
       </div>
 
       <Dialog open={showApiKeyDialog} onOpenChange={setShowApiKeyDialog}>
-        <DialogContent>
+        <DialogContent
+          className={cn(
+            "glass backdrop-blur-xl border",
+            "bg-white/95 border-gray-200/50",
+            "dark:bg-gray-800/95 dark:border-gray-700/50",
+          )}
+        >
           <DialogHeader>
-            <DialogTitle>API Key Required</DialogTitle>
+            <DialogTitle className="gradient-text">
+              API Key Required
+            </DialogTitle>
             <DialogDescription>
               To use the chat functionality, you need to provide an API key. You
               can either enter it below or go to settings.
             </DialogDescription>
           </DialogHeader>
-          <ApiKeyForm/>
+          <ApiKeyForm />
         </DialogContent>
       </Dialog>
     </div>

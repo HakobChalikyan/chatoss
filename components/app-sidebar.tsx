@@ -1,5 +1,7 @@
-import * as React from "react";
-import { Plus, Search, Pin } from "lucide-react";
+"use client";
+
+import type * as React from "react";
+import { Plus, Search, Pin, Sparkles } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -15,13 +17,14 @@ import { Button } from "./ui/button";
 import { useState } from "react";
 import { Label } from "./ui/label";
 import { NavUser } from "./nav-user";
-import { Id } from "@/convex/_generated/dataModel";
+import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Skeleton } from "./ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarChat } from "./sidebar-chat";
+import { cn } from "@/lib/utils";
 
 const isToday = (timestamp: number) => {
   const today = new Date();
@@ -129,8 +132,13 @@ export function AppSidebar({
         <div className="flex items-center justify-between py-2 pl-10">
           <h1 className="text-xl font-semibold text-primary">ChatOSS</h1>
         </div>
+
         <Button
-          className="w-full bg-primary/90 hover:bg-primary mb-2"
+          className={cn(
+            "w-full mb-4 rounded-xl h-12 font-semibold transition-all duration-300 hover-lift",
+            "bg-gradient-to-r from-gray-500 to-slate-600 hover:from-gray-600 hover:to-slate-700",
+            "text-white shadow-lg hover:shadow-xl",
+          )}
           size="sm"
           onClick={onNewChat}
         >
@@ -145,8 +153,11 @@ export function AppSidebar({
             </Label>
             <SidebarInput
               id="search"
-              placeholder={"Search your threads..."}
-              className="pl-8"
+              placeholder="Search your threads..."
+              className={cn(
+                "pl-8 rounded-xl glass bg-white/10 border-white/20",
+                "placeholder:text-muted-foreground/70",
+              )}
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
             />
@@ -154,6 +165,7 @@ export function AppSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarHeader>
+
       <SidebarContent className="px-2">
         <SidebarMenu>
           <div className="flex-1 overflow-y-auto">
@@ -161,12 +173,15 @@ export function AppSidebar({
               <div className="p-2">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="p-3">
-                    <Skeleton className="h-8 w-full bg-neutral-300" />
+                    <Skeleton className="h-8 w-full bg-white/10 rounded-xl" />
                   </div>
                 ))}
               </div>
             ) : chats.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
+              <div className="p-4 text-center text-muted-foreground">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-400/20 to-gray-500/20 flex items-center justify-center mx-auto mb-3">
+                  <Search className="w-6 h-6" />
+                </div>
                 {searchQuery ? "No chats found" : "No chats yet"}
               </div>
             ) : (
@@ -174,7 +189,7 @@ export function AppSidebar({
                 <TooltipProvider>
                   {pinnedChats.length > 0 && (
                     <div className="mb-4">
-                      <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2 flex items-center gap-2">
+                      <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2 px-2">
                         <Pin className="size-3" /> Pinned
                       </h2>
                       {pinnedChats.map((chat) => (
@@ -193,7 +208,7 @@ export function AppSidebar({
 
                   {todayChats.length > 0 && (
                     <div className="mb-4">
-                      <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2 mt-4">
+                      <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 mt-4 px-2">
                         Today
                       </h2>
                       {todayChats.map((chat) => (
@@ -212,7 +227,7 @@ export function AppSidebar({
 
                   {yesterdayChats.length > 0 && (
                     <div className="mb-4">
-                      <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2 mt-4">
+                      <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 mt-4 px-2">
                         Yesterday
                       </h2>
                       {yesterdayChats.map((chat) => (
@@ -231,7 +246,7 @@ export function AppSidebar({
 
                   {olderChats.length > 0 && (
                     <div>
-                      <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2 mt-4">
+                      <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 mt-4 px-2">
                         Older
                       </h2>
                       {olderChats.map((chat) => (
@@ -253,6 +268,7 @@ export function AppSidebar({
           </div>
         </SidebarMenu>
       </SidebarContent>
+
       <SidebarFooter>
         <NavUser />
       </SidebarFooter>

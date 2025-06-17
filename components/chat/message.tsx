@@ -228,7 +228,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
         <DialogContent className="sm:max-w-md">
           <DialogHeader className="space-y-3">
             <DialogTitle className="flex items-center gap-2">
-              <Edit3 className="w-5 h-5 text-blue-600" />
+              <Edit3 className="w-5 h-5 text-gray-600" />
               Edit Message
             </DialogTitle>
             <DialogDescription className="text-sm leading-relaxed">
@@ -252,11 +252,11 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
 
             <div
               onClick={() => handleEditConfirm(true)}
-              className="cursor-pointer flex items-start gap-3 p-3 rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors"
+              className="cursor-pointer flex items-start gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
             >
               <GitBranch className="w-4 h-4 text-gray-500" />
               <div>
-                <p className="font-medium text-sm text-blue-900">Branch Off</p>
+                <p className="font-medium text-sm text-gray-900">Branch Off</p>
                 <p className="text-xs text-gray-500 mt-1">
                   Create a new conversation thread from this point
                 </p>
@@ -265,11 +265,11 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
 
             <div
               onClick={() => setShowEditDialog(false)}
-              className="cursor-pointer flex items-start gap-3 p-3 rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors"
+              className="cursor-pointer flex items-start gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
             >
               <X className="w-4 h-4 text-gray-500 mt-1" />
               <div>
-                <p className="font-medium text-sm text-blue-900">Cancel</p>
+                <p className="font-medium text-sm text-gray-900">Cancel</p>
               </div>
             </div>
           </div>
@@ -280,20 +280,20 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
         className={cn(
           "flex flex-col max-w-3xl mx-auto transition-all duration-200",
           message.role === "user" ? "items-end" : "items-start",
-          isEditing && "max-w-4xl", // Only expand during editing, not reasoning expansion
+          isEditing && "max-w-4xl",
         )}
       >
         <div
           className={cn(
-            "rounded-xl px-4 py-3 relative group shadow-sm transition-all duration-200",
+            "rounded-2xl px-5 py-4 relative group shadow-lg",
             message.role === "user"
-              ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white"
-              : "bg-white border border-gray-200 text-gray-800 hover:shadow-md w-full",
-            isEditing && "ring-2 ring-blue-300 shadow-lg",
+              ? "bg-gradient-to-br from-gray-500 to-slate-600 text-white glass border border-white/20"
+              : "glass bg-white/20 backdrop-blur-xl border border-white/30 text-foreground hover:bg-white/25 w-full",
+            isEditing && "ring-2 ring-gray-400 shadow-xl pulse-glow",
           )}
         >
           {isEditing ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="relative">
                 <textarea
                   ref={textareaRef}
@@ -301,10 +301,10 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
                   onChange={handleTextareaInput}
                   onKeyDown={handleKeyDown}
                   className={cn(
-                    "w-full min-h-[120px] p-3 rounded-lg resize-none",
-                    "border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
-                    "bg-white text-gray-900 placeholder-gray-500",
-                    "transition-all duration-200 font-sans text-sm leading-relaxed",
+                    "w-full min-h-[120px] p-4 rounded-xl resize-none",
+                    "glass bg-white/10 border border-white/30 focus:border-gray-400 focus:ring-2 focus:ring-gray-200",
+                    "text-foreground placeholder:text-muted-foreground/70",
+                    "transition-all duration-300 font-sans text-sm leading-relaxed backdrop-blur-sm",
                   )}
                   placeholder="Edit your message..."
                   style={{
@@ -312,13 +312,13 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
                     fontFamily: "system-ui, -apple-system, sans-serif",
                   }}
                 />
-                <div className="absolute bottom-2 right-2 text-xs text-gray-400 bg-white px-2 py-1 rounded">
+                <div className="absolute bottom-3 right-3 text-xs text-muted-foreground glass bg-white/20 px-3 py-1 rounded-lg">
                   Enter to submit
                 </div>
               </div>
 
               <div className="flex items-center justify-between">
-                <div className="text-xs text-white flex items-center gap-1">
+                <div className="text-xs text-white/80 flex items-center gap-2">
                   <Sparkles className="w-3 h-3" />
                   Press Escape to cancel
                 </div>
@@ -327,7 +327,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
                     variant="secondary"
                     size="sm"
                     onClick={cancelEdit}
-                    className="flex items-center gap-1 h-8 px-3"
+                    className="flex items-center gap-1 h-8 px-3 rounded-xl glass bg-white/20 hover:bg-white/30 border border-white/30"
                   >
                     <X className="w-3 h-3" />
                     Cancel
@@ -335,7 +335,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
                   <Button
                     size="sm"
                     onClick={() => setShowEditDialog(true)}
-                    className="flex items-center gap-1 h-8 px-3"
+                    className="flex items-center gap-1 h-8 px-3 rounded-xl bg-gradient-to-r from-gray-500 to-slate-600 hover:from-gray-600 hover:to-slate-700"
                     disabled={editedContent.trim() === ""}
                   >
                     <Check className="w-3 h-3" />
@@ -347,41 +347,41 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
           ) : (
             <>
               {message.reasoning && (
-                <div className="mt-4 mb-3">
+                <div className="mt-4 mb-4">
                   <button
                     onClick={() => setIsReasoningExpanded(!isReasoningExpanded)}
                     className={cn(
-                      "w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200",
-                      "bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100",
-                      "border border-amber-200 hover:border-amber-300",
+                      "w-full flex items-center justify-between p-4 rounded-xl",
+                      "glass bg-gradient-to-r from-indigo-200/50 to-blue-200/50 hover:from-indigo-300/60 hover:to-blue-300/60",
+                      "border border-indigo-400/30 hover:border-indigo-500/40 backdrop-blur-sm",
                       "group",
                     )}
                   >
-                    <div className="flex items-center gap-2">
-                      <div className="p-1.5 rounded-full bg-amber-200 group-hover:bg-amber-300 transition-colors">
-                        <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 group-hover:from-indigo-700 group-hover:to-blue-700 transition-all duration-300 shadow-lg">
+                        <Sparkles className="w-4 h-4 text-white" />
                       </div>
-                      <span className="text-sm font-semibold text-amber-800">
+                      <span className="text-sm font-semibold text-indigo-900">
                         AI Reasoning
                       </span>
-                      <span className="text-xs text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">
+                      <span className="text-xs text-indigo-900 glass bg-indigo-300/40 px-3 py-1 rounded-full border border-indigo-400/30">
                         {isReasoningExpanded ? "Hide" : "Show"}
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
                       {isReasoningExpanded ? (
-                        <ChevronUp className="w-4 h-4 text-amber-600 group-hover:text-amber-700 transition-colors" />
+                        <ChevronUp className="w-5 h-5 text-indigo-800 group-hover:text-indigo-900 transition-colors" />
                       ) : (
-                        <ChevronDown className="w-4 h-4 text-amber-600 group-hover:text-amber-700 transition-colors" />
+                        <ChevronDown className="w-5 h-5 text-indigo-800 group-hover:text-indigo-900 transition-colors" />
                       )}
                     </div>
                   </button>
 
                   {isReasoningExpanded && (
-                    <div className="mt-3 p-4 bg-gradient-to-br from-slate-50 to-gray-50 rounded-lg border border-slate-200 shadow-sm">
-                      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200">
-                        <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                        <span className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                    <div className="mt-4 p-5 glass bg-slate-100/30 rounded-xl border border-slate-300/20 shadow-sm backdrop-blur-sm">
+                      <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-300/20">
+                        <div className="w-3 h-3 rounded-full bg-gradient-to-r from-gray-500 to-slate-600 animate-pulse shadow-lg"></div>
+                        <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
                           Thought Process
                         </span>
                       </div>
@@ -404,59 +404,68 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
               {renderMessageFiles(message.files)}
 
               {branchedChats && branchedChats.length > 0 && (
-                <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-gray-200">
+                <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-white/20">
                   <span
                     className={cn(
-                      "text-xs flex items-center gap-1 mr-2",
+                      "text-xs flex items-center gap-2 font-medium",
                       message.role === "user"
-                        ? "text-white/80"
-                        : "text-gray-500",
+                        ? "text-white/90"
+                        : "text-muted-foreground",
                     )}
                   >
                     <GitBranch className="w-3 h-3" />
                     Branches:
                   </span>
-                  {branchedChats.map((branch) => (
-                    <a
-                      key={branch._id}
-                      target="_blank"
-                      href={`/chat/${branch._id}`}
-                      className={cn(
-                        "text-xs px-3 py-1 rounded-full transition-all duration-200",
-                        message.role === "user"
-                          ? "bg-white/20 text-white hover:bg-white/30 border-white/30 hover:border-white/40"
-                          : "bg-blue-100 text-blue-700 hover:bg-blue-200 hover:shadow-sm border border-blue-200 hover:border-blue-300",
-                        "flex items-center gap-1",
-                      )}
-                      rel="noreferrer"
-                    >
-                      <MessageSquare className="w-3 h-3" />
-                      {branch.title}
-                    </a>
-                  ))}
+                  <div className="flex flex-wrap gap-2">
+                    {branchedChats.map((branch) => (
+                      <a
+                        key={branch._id}
+                        target="_blank"
+                        href={`/chat/${branch._id}`}
+                        className={cn(
+                          "text-xs px-3 py-2 rounded-xl",
+                          message.role === "user"
+                            ? "glass bg-white/20 text-white hover:bg-white/30 border border-white/30 hover:border-white/40"
+                            : "glass bg-gray-100/50 text-gray-700 hover:bg-gray-200/60 hover:shadow-lg border border-gray-200/50 hover:border-gray-300/60",
+                          "flex items-center gap-2 font-medium backdrop-blur-sm",
+                        )}
+                        rel="noreferrer"
+                      >
+                        <MessageSquare className="w-3 h-3" />
+                        {branch.title}
+                      </a>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {isCancelled && (
-                <div className="text-xs mt-3 text-red-800 bg-red-100 border border-red-200 p-3 rounded-lg flex items-center gap-2">
-                  <X className="w-4 h-4" />
+                <div className="text-xs mt-4 glass bg-red-100/30 text-red-800 border border-red-200/30 p-4 rounded-xl flex items-center gap-3 backdrop-blur-sm">
+                  <div className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center">
+                    <X className="w-3 h-3 text-white" />
+                  </div>
                   <span className="font-medium">Response stopped by user</span>
                 </div>
               )}
 
               <div
                 className={cn(
-                  "text-xs mt-2 flex items-center gap-1",
-                  message.role === "user" ? "text-blue-100" : "text-gray-500",
+                  "text-xs mt-3 flex items-center gap-2 font-medium",
+                  message.role === "user"
+                    ? "text-white/70"
+                    : "text-muted-foreground dark:text-gray-300",
                 )}
               >
                 {!message.isStreaming && (
-                  <span className="font-medium">
+                  <span className="glass bg-white/30 px-2 py-1 rounded-lg border border-white/40 dark:bg-gray-800/50 dark:border-gray-700/60">
                     {formatTime(message._creationTime)}
                   </span>
                 )}
                 {message.isStreaming && !message.content && (
-                  <StreamingIndicator />
+                  <div className="glass bg-white/10 px-3 py-2 rounded-lg border border-white/20 flex items-center gap-2">
+                    <StreamingIndicator />
+                    <span>AI is thinking...</span>
+                  </div>
                 )}
               </div>
             </>

@@ -19,7 +19,7 @@ export const PreviewAttachment = ({
 
   return (
     <div data-testid="input-attachment-preview" className="size-16">
-      <div className="size-16 aspect-video bg-muted rounded-md relative flex flex-col items-center justify-center border border-muted">
+      <div className="size-16 aspect-video bg-white dark:bg-muted rounded-md relative flex flex-col items-center justify-center border border-muted">
         {contentType && contentType.startsWith("image") && url ? (
           // NOTE: it is recommended to use next/image for images
           // eslint-disable-next-line @next/next/no-img-element

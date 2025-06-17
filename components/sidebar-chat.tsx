@@ -1,11 +1,15 @@
-import * as React from "react";
+"use client";
+
+import type * as React from "react";
 import { GitBranch, Trash2, Pin } from "lucide-react";
-import { Id } from "@/convex/_generated/dataModel";
+import type { Id } from "@/convex/_generated/dataModel";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
+  TooltipProvider,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 interface Chat {
   _id: Id<"chats">;
@@ -33,61 +37,79 @@ export function SidebarChat({
   handleTogglePin,
 }: SidebarChatProps) {
   return (
-    <div
-      key={chat._id}
-      onClick={() => onSelectChat(chat._id)}
-      className={`
-        group relative p-3 rounded-lg cursor-pointer transition-colors mb-1
-        ${
+    <TooltipProvider>
+      <div
+        key={chat._id}
+        onClick={() => onSelectChat(chat._id)}
+        className={cn(
+          "group/chat items-center relative px-2 py-1 rounded-lg cursor-pointer mb-2 transition-all duration-200",
           selectedChatId === chat._id
-            ? "bg-blue-50 border border-blue-200"
-            : "hover:bg-gray-200 border border-transparent"
-        }
-      `}
-    >
-      <div className="flex items-start justify-between">
-        <div className="flex-1 min-w-0 flex items-center gap-1">
-          {chat.parentChatId && (
-            <GitBranch className="w-4 h-4 text-gray-400 flex-shrink-0" />
-          )}
-          <h3 className="font-medium text-sm text-gray-900 truncate">
-            {chat.title}
-          </h3>
-        </div>
-        <div className="flex items-center gap-1">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={(e) => handleTogglePin(chat._id, e)}
-                className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-blue-500 transition-all"
-              >
-                <Pin
-                  className={`size-4 ${chat.pinned ? "fill-blue-500 text-blue-500" : ""}`}
-                />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {chat.pinned ? "Unpin chat" : "Pin chat"}
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={(e) => handleDeleteChat(chat._id, e)}
-                disabled={deletingChatId === chat._id}
-                className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all"
-              >
-                {deletingChatId === chat._id ? (
-                  <div className="w-4 h-4 border-2 border-gray-300 border-t-red-500 rounded-full animate-spin" />
-                ) : (
-                  <Trash2 className="size-4" />
-                )}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>Delete chat</TooltipContent>
-          </Tooltip>
+            ? "glass bg-gradient-to-r from-gray-400/20 to-gray-500/20 border border-gray-400/30 dark:from-gray-600/30 dark:to-gray-700/30 dark:border-gray-500/40"
+            : "bg-transparent border border-transparent hover:bg-gray-200/30 hover:border-gray-300/40  dark:hover:bg-gray-700/40  dark:hover:border-gray-500/40",
+        )}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex-1 min-w-0 flex items-center gap-2">
+            {chat.parentChatId && (
+              <GitBranch className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+            )}
+            <h3
+              className={cn(
+                "font-medium text-sm truncate transition-colors",
+                selectedChatId === chat._id
+                  ? "text-foreground"
+                  : "text-foreground/90 group-hover/chat:text-foreground",
+              )}
+            >
+              {chat.title}
+            </h3>
+          </div>
+          <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={(e) => handleTogglePin(chat._id, e)}
+                  className={cn(
+                    "opacity-0 group-hover/chat:opacity-100 p-1.5 rounded-lg transition-all duration-200",
+                    "hover:bg-white/20 dark:hover:bg-gray-600/40",
+                  )}
+                >
+                  <Pin
+                    className={cn(
+                      "size-4 transition-colors",
+                      chat.pinned
+                        ? "fill-amber-500 text-amber-500"
+                        : "text-muted-foreground hover:text-amber-500",
+                    )}
+                  />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {chat.pinned ? "Unpin chat" : "Pin chat"}
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={(e) => handleDeleteChat(chat._id, e)}
+                  disabled={deletingChatId === chat._id}
+                  className={cn(
+                    "opacity-0 group-hover/chat:opacity-100 p-1.5 rounded-lg transition-all duration-200",
+                    "hover:bg-red-500/20 dark:hover:bg-red-500/30 text-muted-foreground hover:text-red-400 dark:hover:text-red-300",
+                  )}
+                >
+                  {deletingChatId === chat._id ? (
+                    <div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-red-400 rounded-full animate-spin" />
+                  ) : (
+                    <Trash2 className="size-4" />
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Delete chat</TooltipContent>
+            </Tooltip>
+          </div>
         </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }

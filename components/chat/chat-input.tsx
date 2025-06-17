@@ -1,10 +1,13 @@
+"use client";
+
 import * as React from "react";
-import { ArrowUp, Paperclip, Search, X } from "lucide-react";
+import { ArrowUp, Paperclip, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { PreviewAttachment } from "../preview-attachment";
 import { AIModelSelector } from "./ai-model-selector";
-import { AIModel } from "@/lib/ai-models";
+import type { AIModel } from "@/lib/ai-models";
+import { cn } from "@/lib/utils";
 
 interface ChatInputProps {
   input: string;
@@ -38,7 +41,6 @@ export function ChatInput({
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [fileUrls, setFileUrls] = React.useState<Record<number, string>>({});
 
-  // Create and cleanup object URLs
   React.useEffect(() => {
     const urls: Record<number, string> = {};
     uploadedFiles.forEach((file, index) => {
@@ -47,18 +49,17 @@ export function ChatInput({
 
     setFileUrls(urls);
 
-    // Cleanup function
     return () => {
       Object.values(urls).forEach((url) => URL.revokeObjectURL(url));
     };
   }, [uploadedFiles]);
 
   return (
-    <div className="relative">
-      <div className="rounded-lg border bg-background">
+    <div className="relative transition-all duration-200">
+      <div className="rounded-2xl rounded-b-none border-0 bg-transparent shadow-2xl">
         {/* Uploaded Files Preview */}
         {uploadedFiles.length > 0 && (
-          <div className="p-3 w-full">
+          <div className="p-4 w-full">
             <div className="flex flex-wrap gap-4">
               {uploadedFiles.map((file, index) => (
                 <PreviewAttachment
@@ -78,8 +79,13 @@ export function ChatInput({
 
         <div className="flex flex-col">
           <Textarea
-            placeholder="Type your message here..."
-            className="min-h-24 resize-none border-0 p-3 focus-visible:ring-0 shadow-none"
+            placeholder="Type your message here... ✨"
+            className={cn(
+              "min-h-24 resize-none border-0 p-4 focus-visible:ring-0 shadow-none",
+              "bg-transparent text-foreground placeholder:text-gray-600 dark:placeholder:text-muted-foreground/70",
+              "text-base leading-relaxed",
+              "dark:bg-transparent",
+            )}
             value={input}
             onChange={(e) => onInputChange(e.target.value)}
             onKeyDown={(e) => {
@@ -89,21 +95,12 @@ export function ChatInput({
               }
             }}
           />
-          <div className="flex items-center justify-between p-3 pt-0">
+          <div className="flex items-center justify-between p-4 pt-0 bg-transparent">
             <div className="flex items-center gap-2">
               <AIModelSelector
                 selectedModel={selectedModel}
                 onModelSelect={onModelSelect}
               />
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="text-xs px-2"
-              >
-                <Search className="h-4 w-4" />
-                <span className="ml-1">Search</span>
-              </Button>
               <input
                 type="file"
                 ref={fileInputRef}
@@ -115,20 +112,28 @@ export function ChatInput({
               <Button
                 type="button"
                 size="sm"
-                variant="ghost"
-                className="px-2"
+                variant="outline"
+                className={cn(
+                  "text-xs transition-colors glass bg-white/10 border-white/20 hover:bg-white/20 hover:border-white/30",
+                  "dark:bg-gray-800/20 dark:border-gray-600/30 dark:hover:bg-gray-700/30 dark:hover:border-gray-500/40",
+                )}
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading || isStreaming}
               >
                 {isUploading ? (
-                  <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-gray-500 rounded-full animate-spin" />
                 ) : (
                   <Paperclip className="h-4 w-4" />
                 )}
               </Button>
             </div>
             {isStreaming ? (
-              <Button onClick={onCancel} size="sm" variant="destructive">
+              <Button
+                onClick={onCancel}
+                size="sm"
+                variant="destructive"
+                className="rounded-xl hover-lift"
+              >
                 <X className="h-4 w-4" />
                 <span className="sr-only">Cancel</span>
               </Button>
@@ -139,8 +144,18 @@ export function ChatInput({
                 disabled={
                   (!input.trim() && uploadedFiles.length === 0) || isCreating
                 }
+                className={cn(
+                  "rounded-xl hover-lift transition-all duration-300",
+                  "bg-gradient-to-r from-gray-500 to-slate-600 hover:from-gray-600 hover:to-slate-700",
+                  "text-white shadow-lg hover:shadow-xl",
+                  "disabled:opacity-50 disabled:cursor-not-allowed",
+                )}
               >
-                <ArrowUp className="h-4 w-4" />
+                {isCreating ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <ArrowUp className="h-4 w-4" />
+                )}
                 <span className="sr-only">Send</span>
               </Button>
             )}

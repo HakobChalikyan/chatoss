@@ -16,7 +16,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { AI_MODELS, AIModel } from "@/lib/ai-models";
+import { AI_MODELS, type AIModel } from "@/lib/ai-models";
 import { CAPABILITY_CONFIG } from "@/lib/ai-capabilities";
 
 interface AIModelSelectorProps {
@@ -51,9 +51,7 @@ const CapabilityIcon = ({
           <Icon className="h-3.5 w-3.5" />
         </div>
       </TooltipTrigger>
-      <TooltipContent side="top" className="text-xs">
-        {config.label}
-      </TooltipContent>
+      <TooltipContent side="top">{config.label}</TooltipContent>
     </Tooltip>
   );
 };
@@ -85,9 +83,7 @@ const CapabilityFilter = ({
           <Icon className="h-4 w-4" />
         </button>
       </TooltipTrigger>
-      <TooltipContent side="top" className="text-xs">
-        {config.label}
-      </TooltipContent>
+      <TooltipContent side="top">{config.label}</TooltipContent>
     </Tooltip>
   );
 };
@@ -158,27 +154,33 @@ export function AIModelSelector({
             type="button"
             size="sm"
             variant="outline"
-            className="text-xs hover:bg-blue-50 hover:border-blue-300 transition-colors"
+            className={cn(
+              "text-xs transition-all duration-200 glass bg-white/10 border-white/20 hover:bg-white/20 hover:border-white/30",
+              "dark:bg-gray-800/30 dark:border-gray-600/30 dark:hover:bg-gray-700/40 dark:hover:border-gray-500/40",
+            )}
           >
-            <Sparkles className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+            <Sparkles className="h-3.5 w-3.5 mr-1.5 text-gray-600 dark:text-gray-300" />
             {selectedModel.name}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-[420px] p-0">
+        <DropdownMenuContent
+          align="start"
+          className="w-[420px] p-0 glass bg-white/95 border-gray-200/50 backdrop-blur-xl dark:bg-gray-800/95 dark:border-gray-700/50 shadow-xl"
+        >
           {/* Search Section */}
-          <div className="p-4 border-b border-gray-100">
+          <div className="p-4 border-b border-gray-100 dark:border-gray-700">
             <div className="relative mb-3">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
               <Input
                 placeholder="Search models..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-9 h-9 text-sm"
+                className="pl-9 pr-9 h-9 text-sm glass bg-white/50 border-gray-200/50 dark:bg-gray-700/50 dark:border-gray-600/50 dark:text-gray-100 dark:placeholder:text-gray-400"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -187,7 +189,7 @@ export function AIModelSelector({
 
             {/* Capability Filters */}
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 text-xs text-gray-600">
+              <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-300">
                 <Filter className="h-3.5 w-3.5" />
                 <span>Filter:</span>
               </div>
@@ -208,7 +210,7 @@ export function AIModelSelector({
                   variant="ghost"
                   size="sm"
                   onClick={clearFilters}
-                  className="h-6 px-2 text-xs text-gray-500 hover:text-gray-700"
+                  className="h-6 px-2 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700/50"
                 >
                   Clear
                 </Button>
@@ -220,11 +222,13 @@ export function AIModelSelector({
           <div className="max-h-[400px] overflow-y-auto">
             {filteredModels.length === 0 ? (
               <div className="p-6 text-center">
-                <div className="text-gray-400 mb-2">
+                <div className="text-gray-400 dark:text-gray-500 mb-2">
                   <Search className="h-8 w-8 mx-auto" />
                 </div>
-                <p className="text-sm text-gray-500 mb-1">No models found</p>
-                <p className="text-xs text-gray-400">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                  No models found
+                </p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">
                   {searchQuery
                     ? `Try a different search term`
                     : `Try adjusting your filters`}
@@ -237,27 +241,27 @@ export function AIModelSelector({
                     key={model.id}
                     onClick={() => handleModelSelect(model)}
                     className={cn(
-                      "w-full text-left p-4 rounded-xl transition-all duration-200",
-                      "border-2 hover:shadow-md",
+                      "w-full text-left p-4 rounded-xl transition-all duration-200 hover-lift",
+                      "border-2",
                       selectedModel.id === model.id
-                        ? "bg-blue-50 border-blue-200 shadow-sm"
-                        : "bg-white border-gray-100 hover:border-gray-200 hover:bg-gray-50",
+                        ? "glass bg-gray-100/50 border-gray-300/50 shadow-sm dark:bg-gray-700/50 dark:border-gray-600/50"
+                        : "bg-white border-gray-100 hover:border-gray-200 hover:bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700 dark:hover:border-gray-600 dark:hover:bg-gray-700/70",
                       index > 0 && "mt-2",
                     )}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-sm text-gray-900 truncate">
+                          <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate">
                             {model.name}
                           </h3>
                           {selectedModel.id === model.id && (
-                            <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                            <div className="w-5 h-5 rounded-full bg-gray-600 dark:bg-gray-500 flex items-center justify-center flex-shrink-0">
                               <Check className="h-3 w-3 text-white" />
                             </div>
                           )}
                         </div>
-                        <p className="text-xs text-gray-600 mb-3 line-clamp-2">
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
                           {model.description}
                         </p>
                       </div>
@@ -282,13 +286,13 @@ export function AIModelSelector({
           </div>
 
           {/* Footer */}
-          <div className="p-3 border-t border-gray-100 bg-gray-50">
-            <div className="flex items-center justify-between text-xs text-gray-500">
+          <div className="p-3 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+            <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
               <span>
                 {filteredModels.length} of {AI_MODELS.length} models
               </span>
               {hasActiveFilters && (
-                <span className="text-blue-600">
+                <span className="text-gray-600 dark:text-gray-300">
                   {activeFilters.size} filter
                   {activeFilters.size !== 1 ? "s" : ""} active
                 </span>

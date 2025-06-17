@@ -66,7 +66,7 @@ export function Messages({ messages, chatId, branchedChats }: MessagesProps) {
       ref={containerRef}
       className="relative w-full flex flex-col gap-4 h-full overflow-y-auto"
     >
-      <div className="space-y-6 pb-4">
+      <div className="space-y-6">
         {messages.map((message) => (
           <Message
             key={message._id}
