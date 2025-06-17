@@ -290,18 +290,17 @@ export function FolderItem({
             </div>
           ) : (
             <>
+              {chatCount > 0 && (
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                  {chatCount}
+                </span>
+              )}
               <span
                 className="text-sm font-medium truncate flex-1 min-w-0 cursor-pointer"
                 onClick={handleFolderClick}
               >
                 {folder.name}
               </span>
-
-              {chatCount > 0 && (
-                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                  {chatCount}
-                </span>
-              )}
             </>
           )}
         </div>
