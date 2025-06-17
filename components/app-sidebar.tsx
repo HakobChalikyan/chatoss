@@ -136,7 +136,7 @@ export function AppSidebar({
         <Button
           className={cn(
             "w-full mb-4 rounded-xl h-12 font-semibold transition-all duration-300 hover-lift",
-            "bg-gradient-to-r from-gray-500 to-slate-600 hover:from-gray-600 hover:to-slate-700",
+            "bg-gradient-to-r from-neutral-500 to-neutral-600 hover:from-neutral-600 hover:to-neutral-700",
             "text-white shadow-lg hover:shadow-xl",
           )}
           size="sm"
@@ -179,7 +179,7 @@ export function AppSidebar({
               </div>
             ) : chats.length === 0 ? (
               <div className="p-4 text-center text-muted-foreground">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-400/20 to-gray-500/20 flex items-center justify-center mx-auto mb-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-neutral-400/20 to-neutral-500/20 flex items-center justify-center mx-auto mb-3">
                   <Search className="w-6 h-6" />
                 </div>
                 {searchQuery ? "No chats found" : "No chats yet"}

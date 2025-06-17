@@ -29,7 +29,8 @@ export const categories: Category[] = [
     id: "create",
     icon: Sparkles,
     label: "Create",
-    color: "from-gray-500 to-slate-600 dark:from-gray-400 dark:to-slate-500",
+    color:
+      "from-neutral-500 to-neutral-600 dark:from-neutral-400 dark:to-neutral-500",
   },
   {
     id: "explore",
@@ -41,7 +42,8 @@ export const categories: Category[] = [
     id: "code",
     icon: Code,
     label: "Code",
-    color: "from-slate-500 to-gray-600 dark:from-slate-400 dark:to-gray-500",
+    color:
+      "from-neutral-500 to-neutral-600 dark:from-neutral-400 dark:to-neutral-500",
   },
   {
     id: "learn",
@@ -76,7 +78,7 @@ export const suggestedQuestions: SuggestedQuestion[] = [
     icon: Rocket,
     text: "Are black holes real?",
     gradient:
-      "from-slate-500 to-slate-600 dark:from-slate-400 dark:to-slate-500",
+      "from-neutral-500 to-neutral-600 dark:from-neutral-400 dark:to-neutral-500",
     category: "explore",
   },
   {
@@ -114,7 +116,8 @@ export const suggestedQuestions: SuggestedQuestion[] = [
   {
     icon: Brain,
     text: "How does AI work?",
-    gradient: "from-gray-500 to-gray-600 dark:from-gray-400 dark:to-gray-500",
+    gradient:
+      "from-neutral-500 to-neutral-600 dark:from-neutral-400 dark:to-neutral-500",
     category: "learn",
   },
   {

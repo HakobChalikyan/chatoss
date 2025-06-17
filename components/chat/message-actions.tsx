@@ -77,7 +77,7 @@ export function MessageActions({
             <button
               onClick={onEdit}
               className={cn(
-                "p-1 rounded-md hover:bg-gray-200/50 transition-colors",
+                "p-1 rounded-md hover:bg-neutral-200/50 transition-colors",
               )}
             >
               <Pencil className="w-4 h-4" />
@@ -92,7 +92,7 @@ export function MessageActions({
             <button
               onClick={onBranch}
               className={cn(
-                "p-1 rounded-md hover:bg-gray-200/50 transition-colors",
+                "p-1 rounded-md hover:bg-neutral-200/50 transition-colors",
               )}
             >
               <GitBranch className="w-4 h-4" />
@@ -106,7 +106,7 @@ export function MessageActions({
           <button
             onClick={copyAsPlainText}
             className={cn(
-              "p-1 rounded-md hover:bg-gray-200/50 transition-colors",
+              "p-1 rounded-md hover:bg-neutral-200/50 transition-colors",
             )}
           >
             {copied ? (
@@ -125,7 +125,7 @@ export function MessageActions({
           <button
             onClick={copyAsMarkdown}
             className={cn(
-              "p-1 rounded-md hover:bg-gray-200/50 transition-colors",
+              "p-1 rounded-md hover:bg-neutral-200/50 transition-colors",
             )}
           >
             {copiedMarkdown ? (

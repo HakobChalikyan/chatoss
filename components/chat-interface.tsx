@@ -217,7 +217,7 @@ export function ChatInterface({
     <div className="flex flex-col h-full relative">
       {/* Enhanced background decoration for dark mode */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-gray-400/10 to-slate-400/10 dark:from-gray-600/20 dark:to-slate-600/20 rounded-full blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-neutral-400/10 to-neutral-400/10 dark:from-neutral-600/20 dark:to-neutral-600/20 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-stone-400/10 to-zinc-400/10 dark:from-stone-600/20 dark:to-zinc-600/20 rounded-full blur-3xl"></div>
       </div>
 
@@ -230,7 +230,7 @@ export function ChatInterface({
             {/* Hero Section */}
             <div className="text-center mb-6 space-y-2">
               <div className="inline-flex items-center gap-2 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-500 to-slate-600 dark:from-gray-400 dark:to-slate-500 flex items-center justify-center float">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-neutral-500 to-neutral-600 dark:from-neutral-400 dark:to-neutral-500 flex items-center justify-center float">
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <h1 className="text-3xl font-bold gradient-text">
@@ -252,10 +252,10 @@ export function ChatInterface({
                   className={cn(
                     "px-8 py-4 rounded-2xl border hover-lift glass",
                     "bg-white/10 hover:bg-white/20 border-white/20 hover:border-white/30",
-                    "dark:bg-gray-800/30 dark:hover:bg-gray-700/40 dark:border-gray-600/30 dark:hover:border-gray-500/40",
+                    "dark:bg-neutral-800/30 dark:hover:bg-neutral-700/40 dark:border-neutral-600/30 dark:hover:border-neutral-500/40",
                     "backdrop-blur-sm transition-all duration-300",
                     selectedCategory === category.id &&
-                      "bg-white/20 dark:bg-gray-700/40",
+                      "bg-white/20 dark:bg-neutral-700/40",
                   )}
                   style={{ animationDelay: `${index * 100}ms` }}
                   onClick={() => setSelectedCategory(category.id)}
@@ -282,7 +282,7 @@ export function ChatInterface({
                   className={cn(
                     "w-full justify-start text-left h-auto py-2 px-4 rounded-xl hover-lift",
                     "glass bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20",
-                    "dark:bg-gray-800/20 dark:hover:bg-gray-700/30 dark:border-gray-600/20 dark:hover:border-gray-500/30",
+                    "dark:bg-neutral-800/20 dark:hover:bg-neutral-700/30 dark:border-neutral-600/20 dark:hover:border-neutral-500/30",
                     "transition-all duration-300",
                   )}
                   onClick={() => setInput(question.text)}
@@ -337,7 +337,7 @@ export function ChatInterface({
               className={cn(
                 "rounded-full shadow-lg glass pulse-glow",
                 "bg-white/10 hover:bg-white/20 border border-white/20",
-                "dark:bg-gray-800/30 dark:hover:bg-gray-700/40 dark:border-gray-600/30",
+                "dark:bg-neutral-800/30 dark:hover:bg-neutral-700/40 dark:border-neutral-600/30",
               )}
               size="icon"
               variant="outline"
@@ -351,7 +351,7 @@ export function ChatInterface({
           className={cn(
             "glass rounded-2xl rounded-b-none backdrop-blur-xl",
             "bg-white/10 border border-white/20",
-            "dark:bg-gray-800/30 dark:border-gray-600/30",
+            "dark:bg-neutral-800/30 dark:border-neutral-600/30",
           )}
         >
           <ChatInput
@@ -375,8 +375,8 @@ export function ChatInterface({
         <DialogContent
           className={cn(
             "glass backdrop-blur-xl border",
-            "bg-white/95 border-gray-200/50",
-            "dark:bg-gray-800/95 dark:border-gray-700/50",
+            "bg-white/95 border-neutral-200/50",
+            "dark:bg-neutral-800/95 dark:border-neutral-700/50",
           )}
         >
           <DialogHeader>

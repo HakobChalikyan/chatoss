@@ -29,13 +29,13 @@ export default function SignIn() {
         }}
       >
         <input
-          className="bg-background text-foreground rounded-md p-2 border-2 border-slate-200 dark:border-slate-800"
+          className="bg-background text-foreground rounded-md p-2 border-2 border-neutral-200 dark:border-neutral-800"
           type="email"
           name="email"
           placeholder="Email"
         />
         <input
-          className="bg-background text-foreground rounded-md p-2 border-2 border-slate-200 dark:border-slate-800"
+          className="bg-background text-foreground rounded-md p-2 border-2 border-neutral-200 dark:border-neutral-800"
           type="password"
           name="password"
           placeholder="Password"

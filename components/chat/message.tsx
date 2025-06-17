@@ -58,15 +58,15 @@ const StreamingIndicator = () => (
   <div className="flex items-center justify-center">
     <div className="flex space-x-1">
       <div
-        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+        className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce"
         style={{ animationDelay: "0ms" }}
       ></div>
       <div
-        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+        className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce"
         style={{ animationDelay: "150ms" }}
       ></div>
       <div
-        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+        className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce"
         style={{ animationDelay: "300ms" }}
       ></div>
     </div>
@@ -228,7 +228,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
         <DialogContent className="sm:max-w-md">
           <DialogHeader className="space-y-3">
             <DialogTitle className="flex items-center gap-2">
-              <Edit3 className="w-5 h-5 text-gray-600" />
+              <Edit3 className="w-5 h-5 text-neutral-600" />
               Edit Message
             </DialogTitle>
             <DialogDescription className="text-sm leading-relaxed">
@@ -239,12 +239,12 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
           <div className="grid gap-3">
             <div
               onClick={() => handleEditConfirm(false)}
-              className="cursor-pointer flex items-start gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+              className="cursor-pointer flex items-start gap-3 p-3 rounded-lg border border-neutral-200 hover:bg-neutral-50 transition-colors"
             >
-              <RotateCcw className="w-4 h-4 text-gray-600" />
+              <RotateCcw className="w-4 h-4 text-neutral-600" />
               <div>
                 <p className="font-medium text-sm">Edit & Resubmit</p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-neutral-500 mt-1">
                   Replace the original message and regenerate the conversation
                 </p>
               </div>
@@ -252,12 +252,14 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
 
             <div
               onClick={() => handleEditConfirm(true)}
-              className="cursor-pointer flex items-start gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+              className="cursor-pointer flex items-start gap-3 p-3 rounded-lg border border-neutral-200 hover:bg-neutral-50 transition-colors"
             >
-              <GitBranch className="w-4 h-4 text-gray-500" />
+              <GitBranch className="w-4 h-4 text-neutral-500" />
               <div>
-                <p className="font-medium text-sm text-gray-900">Branch Off</p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="font-medium text-sm text-neutral-900">
+                  Branch Off
+                </p>
+                <p className="text-xs text-neutral-500 mt-1">
                   Create a new conversation thread from this point
                 </p>
               </div>
@@ -265,11 +267,11 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
 
             <div
               onClick={() => setShowEditDialog(false)}
-              className="cursor-pointer flex items-start gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+              className="cursor-pointer flex items-start gap-3 p-3 rounded-lg border border-neutral-200 hover:bg-neutral-50 transition-colors"
             >
-              <X className="w-4 h-4 text-gray-500 mt-1" />
+              <X className="w-4 h-4 text-neutral-500 mt-1" />
               <div>
-                <p className="font-medium text-sm text-gray-900">Cancel</p>
+                <p className="font-medium text-sm text-neutral-900">Cancel</p>
               </div>
             </div>
           </div>
@@ -287,9 +289,9 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
           className={cn(
             "rounded-2xl px-5 py-4 relative group shadow-lg",
             message.role === "user"
-              ? "bg-gradient-to-br from-gray-500 to-slate-600 text-white glass border border-white/20"
+              ? "bg-gradient-to-br from-neutral-500 to-neutral-600 text-white glass border border-white/20"
               : "glass bg-white/20 backdrop-blur-xl border border-white/30 text-foreground hover:bg-white/25 w-full",
-            isEditing && "ring-2 ring-gray-400 shadow-xl pulse-glow",
+            isEditing && "ring-2 ring-neutral-400 shadow-xl pulse-glow",
           )}
         >
           {isEditing ? (
@@ -302,7 +304,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
                   onKeyDown={handleKeyDown}
                   className={cn(
                     "w-full min-h-[120px] p-4 rounded-xl resize-none",
-                    "glass bg-white/10 border border-white/30 focus:border-gray-400 focus:ring-2 focus:ring-gray-200",
+                    "glass bg-white/10 border border-white/30 focus:border-neutral-400 focus:ring-2 focus:ring-neutral-200",
                     "text-foreground placeholder:text-muted-foreground/70",
                     "transition-all duration-300 font-sans text-sm leading-relaxed backdrop-blur-sm",
                   )}
@@ -335,7 +337,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
                   <Button
                     size="sm"
                     onClick={() => setShowEditDialog(true)}
-                    className="flex items-center gap-1 h-8 px-3 rounded-xl bg-gradient-to-r from-gray-500 to-slate-600 hover:from-gray-600 hover:to-slate-700"
+                    className="flex items-center gap-1 h-8 px-3 rounded-xl bg-gradient-to-r from-neutral-500 to-neutral-600 hover:from-neutral-600 hover:to-neutral-700"
                     disabled={editedContent.trim() === ""}
                   >
                     <Check className="w-3 h-3" />
@@ -378,15 +380,15 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
                   </button>
 
                   {isReasoningExpanded && (
-                    <div className="mt-4 p-5 glass bg-slate-100/30 rounded-xl border border-slate-300/20 shadow-sm backdrop-blur-sm">
-                      <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-300/20">
-                        <div className="w-3 h-3 rounded-full bg-gradient-to-r from-gray-500 to-slate-600 animate-pulse shadow-lg"></div>
-                        <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    <div className="mt-4 p-5 glass bg-neutral-100/30 rounded-xl border border-neutral-300/20 shadow-sm backdrop-blur-sm">
+                      <div className="flex items-center gap-3 mb-4 pb-3 border-b border-neutral-300/20">
+                        <div className="w-3 h-3 rounded-full bg-gradient-to-r from-neutral-500 to-neutral-600 animate-pulse shadow-lg"></div>
+                        <span className="text-xs font-semibold text-neutral-700 uppercase tracking-wider">
                           Thought Process
                         </span>
                       </div>
-                      <div className="prose prose-sm prose-slate max-w-none">
-                        <div className="text-slate-700 leading-relaxed">
+                      <div className="prose prose-sm prose-neutral max-w-none">
+                        <div className="text-neutral-700 leading-relaxed">
                           <Markdown>{message.reasoning}</Markdown>
                         </div>
                       </div>
@@ -426,7 +428,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
                           "text-xs px-3 py-2 rounded-xl",
                           message.role === "user"
                             ? "glass bg-white/20 text-white hover:bg-white/30 border border-white/30 hover:border-white/40"
-                            : "glass bg-gray-100/50 text-gray-700 hover:bg-gray-200/60 hover:shadow-lg border border-gray-200/50 hover:border-gray-300/60",
+                            : "glass bg-neutral-100/50 text-neutral-700 hover:bg-neutral-200/60 hover:shadow-lg border border-neutral-200/50 hover:border-neutral-300/60",
                           "flex items-center gap-2 font-medium backdrop-blur-sm",
                         )}
                         rel="noreferrer"
@@ -453,11 +455,11 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
                   "text-xs mt-3 flex items-center gap-2 font-medium",
                   message.role === "user"
                     ? "text-white/70"
-                    : "text-muted-foreground dark:text-gray-300",
+                    : "text-muted-foreground dark:text-neutral-300",
                 )}
               >
                 {!message.isStreaming && (
-                  <span className="glass bg-white/30 px-2 py-1 rounded-lg border border-white/40 dark:bg-gray-800/50 dark:border-gray-700/60">
+                  <span className="glass bg-white/30 px-2 py-1 rounded-lg border border-white/40 dark:bg-neutral-800/50 dark:border-neutral-700/60">
                     {formatTime(message._creationTime)}
                   </span>
                 )}

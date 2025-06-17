@@ -48,7 +48,7 @@ export function ApiKeyForm() {
         <Button
           onClick={() => setIsEditing(true)}
           variant="outline"
-          className="glass bg-white/50 hover:bg-white/70 border-gray-200/50 dark:bg-gray-700/50 dark:hover:bg-gray-600/70 dark:border-gray-600/50"
+          className="glass bg-white/50 hover:bg-white/70 border-neutral-200/50 dark:bg-neutral-700/50 dark:hover:bg-neutral-600/70 dark:border-neutral-600/50"
         >
           <Edit className="w-4 h-4 mr-2" />
           Change API Key
@@ -62,7 +62,7 @@ export function ApiKeyForm() {
       <div>
         <Label
           htmlFor="apiKey"
-          className="text-gray-700 dark:text-gray-300 flex items-center gap-2"
+          className="text-neutral-700 dark:text-neutral-300 flex items-center gap-2"
         >
           <Key className="w-4 h-4" />
           OpenRouter API Key
@@ -73,16 +73,16 @@ export function ApiKeyForm() {
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
           placeholder="Enter your OpenRouter API key"
-          className="mt-2 glass bg-white/50 border-gray-200/50 dark:bg-gray-700/50 dark:border-gray-600/50"
+          className="mt-2 glass bg-white/50 border-neutral-200/50 dark:bg-neutral-700/50 dark:border-neutral-600/50"
         />
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+        <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
           Your API key is encrypted and stored securely
         </p>
       </div>
       <div className="flex gap-2">
         <Button
           type="submit"
-          className="bg-gradient-to-r from-gray-500 to-slate-600 hover:from-gray-600 hover:to-slate-700 shadow-lg hover:shadow-xl transition-all duration-300"
+          className="bg-gradient-to-r from-neutral-500 to-neutral-600 hover:from-neutral-600 hover:to-neutral-700 shadow-lg hover:shadow-xl transition-all duration-300"
         >
           <Check className="w-4 h-4 mr-2" />
           Save API Key
@@ -92,7 +92,7 @@ export function ApiKeyForm() {
             type="button"
             variant="outline"
             onClick={() => setIsEditing(false)}
-            className="glass bg-white/50 hover:bg-white/70 border-gray-200/50 dark:bg-gray-700/50 dark:hover:bg-gray-600/70 dark:border-gray-600/50"
+            className="glass bg-white/50 hover:bg-white/70 border-neutral-200/50 dark:bg-neutral-700/50 dark:hover:bg-neutral-600/70 dark:border-neutral-600/50"
           >
             Cancel
           </Button>

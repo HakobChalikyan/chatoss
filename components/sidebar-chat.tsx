@@ -44,8 +44,8 @@ export function SidebarChat({
         className={cn(
           "group/chat items-center relative px-2 py-1 rounded-lg cursor-pointer mb-2 transition-all duration-200",
           selectedChatId === chat._id
-            ? "glass bg-gradient-to-r from-gray-400/20 to-gray-500/20 border border-gray-400/30 dark:from-gray-600/30 dark:to-gray-700/30 dark:border-gray-500/40"
-            : "bg-transparent border border-transparent hover:bg-gray-200/30 hover:border-gray-300/40  dark:hover:bg-gray-700/40  dark:hover:border-gray-500/40",
+            ? "glass bg-gradient-to-r from-neutral-400/20 to-neutral-500/20 border border-neutral-400/30 dark:from-neutral-600/30 dark:to-neutral-700/30 dark:border-neutral-500/40"
+            : "bg-transparent border border-transparent hover:bg-neutral-200/30 hover:border-neutral-300/40  dark:hover:bg-neutral-700/40  dark:hover:border-neutral-500/40",
         )}
       >
         <div className="flex items-center justify-between">
@@ -71,7 +71,7 @@ export function SidebarChat({
                   onClick={(e) => handleTogglePin(chat._id, e)}
                   className={cn(
                     "opacity-0 group-hover/chat:opacity-100 p-1.5 rounded-lg transition-all duration-200",
-                    "hover:bg-white/20 dark:hover:bg-gray-600/40",
+                    "hover:bg-white/20 dark:hover:bg-neutral-600/40",
                   )}
                 >
                   <Pin

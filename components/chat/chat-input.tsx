@@ -82,7 +82,7 @@ export function ChatInput({
             placeholder="Type your message here... ✨"
             className={cn(
               "min-h-24 resize-none border-0 p-4 focus-visible:ring-0 shadow-none",
-              "bg-transparent text-foreground placeholder:text-gray-600 dark:placeholder:text-muted-foreground/70",
+              "bg-transparent text-foreground placeholder:text-neutral-600 dark:placeholder:text-muted-foreground/70",
               "text-base leading-relaxed",
               "dark:bg-transparent",
             )}
@@ -115,13 +115,13 @@ export function ChatInput({
                 variant="outline"
                 className={cn(
                   "text-xs transition-colors glass bg-white/10 border-white/20 hover:bg-white/20 hover:border-white/30",
-                  "dark:bg-gray-800/20 dark:border-gray-600/30 dark:hover:bg-gray-700/30 dark:hover:border-gray-500/40",
+                  "dark:bg-neutral-800/20 dark:border-neutral-600/30 dark:hover:bg-neutral-700/30 dark:hover:border-neutral-500/40",
                 )}
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading || isStreaming}
               >
                 {isUploading ? (
-                  <div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-gray-500 rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-neutral-500 rounded-full animate-spin" />
                 ) : (
                   <Paperclip className="h-4 w-4" />
                 )}
@@ -146,7 +146,7 @@ export function ChatInput({
                 }
                 className={cn(
                   "rounded-xl hover-lift transition-all duration-300",
-                  "bg-gradient-to-r from-gray-500 to-slate-600 hover:from-gray-600 hover:to-slate-700",
+                  "bg-gradient-to-r from-neutral-500 to-neutral-600 hover:from-neutral-600 hover:to-neutral-700",
                   "text-white shadow-lg hover:shadow-xl",
                   "disabled:opacity-50 disabled:cursor-not-allowed",
                 )}

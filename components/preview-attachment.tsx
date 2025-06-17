@@ -45,9 +45,9 @@ export const PreviewAttachment = ({
         {onDelete && (
           <button
             onClick={onDelete}
-            className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-sm hover:bg-gray-100 transition-colors"
+            className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-sm hover:bg-neutral-100 transition-colors"
           >
-            <X className="h-3 w-3 text-gray-500" />
+            <X className="h-3 w-3 text-neutral-500" />
           </button>
         )}
       </div>
