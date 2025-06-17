@@ -25,6 +25,7 @@ export default defineSchema({
     parentChatId: v.optional(v.id("chats")),
     branchedFromMessageId: v.optional(v.id("messages")),
     pinned: v.optional(v.boolean()),
+    folderId: v.optional(v.id("folders")),
   })
     .index("by_user", ["userId"])
     .index("by_user_and_last_message", ["userId", "lastMessageAt"])
@@ -32,6 +33,7 @@ export default defineSchema({
       "parentChatId",
       "branchedFromMessageId",
     ])
+    .index("by_folder", ["folderId"])
     .searchIndex("search_title", {
       searchField: "title",
       filterFields: ["userId"],
@@ -90,4 +92,13 @@ export default defineSchema({
   })
     .index("by_chat", ["chatId"])
     .index("by_creation", ["createdAt"]),
+
+  folders: defineTable({
+    userId: v.id("users"),
+    name: v.string(),
+    parentFolderId: v.optional(v.id("folders")),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_parent", ["parentFolderId"]),
 });

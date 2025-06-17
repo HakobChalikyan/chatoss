@@ -1,13 +1,7 @@
 import { v } from "convex/values";
-import {
-  query,
-  mutation,
-  internalQuery,
-  internalMutation,
-  internalAction,
-} from "./_generated/server";
+import { query, mutation } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { api, internal } from "./_generated/api";
+import { internal } from "./_generated/api";
 
 export const createChat = mutation({
   args: {
@@ -295,6 +289,26 @@ export const togglePinChat = mutation({
 
     await ctx.db.patch(args.chatId, {
       pinned: !chat.pinned,
+    });
+  },
+});
+
+export const updateChatTitle = mutation({
+  args: {
+    chatId: v.id("chats"),
+    title: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const chat = await ctx.db.get(args.chatId);
+    if (!chat || chat.userId !== userId) {
+      throw new Error("Chat not found or unauthorized");
+    }
+
+    await ctx.db.patch(args.chatId, {
+      title: args.title,
     });
   },
 });
