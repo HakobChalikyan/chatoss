@@ -155,7 +155,7 @@ export function AppSidebar({
               id="search"
               placeholder="Search your threads..."
               className={cn(
-                "pl-8 rounded-xl glass bg-white/10 border-white/20",
+                "pl-8 rounded-xl glass bg-white/10",
                 "placeholder:text-muted-foreground/70",
               )}
               value={searchQuery}
