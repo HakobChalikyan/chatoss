@@ -14,7 +14,6 @@ export default defineSchema({
     userId: v.string(),
     apiKey: v.string(),
     model: v.string(),
-    createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_user", ["userId"]),
 
@@ -84,15 +83,11 @@ export default defineSchema({
     ),
     userId: v.id("users"),
   }),
-
   streamControllers: defineTable({
     chatId: v.id("chats"),
     messageId: v.id("messages"),
-    createdAt: v.number(),
   })
-    .index("by_chat", ["chatId"])
-    .index("by_creation", ["createdAt"]),
-
+    .index("by_chat", ["chatId"]),
   folders: defineTable({
     userId: v.id("users"),
     name: v.string(),

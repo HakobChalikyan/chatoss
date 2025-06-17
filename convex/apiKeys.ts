@@ -38,7 +38,6 @@ export const saveApiKey = mutation({
         userId,
         apiKey: encryptedApiKey,
         model: args.model,
-        createdAt: now,
         updatedAt: now,
       });
     }

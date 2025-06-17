@@ -390,7 +390,6 @@ export const storeStreamController = internalMutation({
     await ctx.db.insert("streamControllers", {
       chatId: args.chatId,
       messageId: args.controllerId,
-      createdAt: Date.now(),
     });
   },
 });
