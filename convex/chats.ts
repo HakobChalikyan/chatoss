@@ -281,3 +281,20 @@ export const deleteChat = mutation({
     await ctx.db.delete(args.chatId);
   },
 });
+
+export const togglePinChat = mutation({
+  args: { chatId: v.id("chats") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const chat = await ctx.db.get(args.chatId);
+    if (!chat || chat.userId !== userId) {
+      throw new Error("Chat not found or unauthorized");
+    }
+
+    await ctx.db.patch(args.chatId, {
+      pinned: !chat.pinned,
+    });
+  },
+});

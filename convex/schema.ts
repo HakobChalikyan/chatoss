@@ -24,6 +24,7 @@ export default defineSchema({
     lastMessageAt: v.number(),
     parentChatId: v.optional(v.id("chats")),
     branchedFromMessageId: v.optional(v.id("messages")),
+    pinned: v.optional(v.boolean()),
   })
     .index("by_user", ["userId"])
     .index("by_user_and_last_message", ["userId", "lastMessageAt"])

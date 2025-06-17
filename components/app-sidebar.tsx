@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Plus, Search, GitBranch, Trash2 } from "lucide-react";
+import { Plus, Search, Pin } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -20,12 +20,36 @@ import { toast } from "sonner";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Skeleton } from "./ui/skeleton";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { SidebarChat } from "./sidebar-chat";
+
+const isToday = (timestamp: number) => {
+  const today = new Date();
+  const date = new Date(timestamp);
+  return (
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  );
+};
+
+const isYesterday = (timestamp: number) => {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const date = new Date(timestamp);
+  return (
+    date.getDate() === yesterday.getDate() &&
+    date.getMonth() === yesterday.getMonth() &&
+    date.getFullYear() === yesterday.getFullYear()
+  );
+};
 
 interface Chat {
   _id: Id<"chats">;
   title: string;
   lastMessageAt: number;
   parentChatId?: Id<"chats">;
+  pinned?: boolean;
 }
 
 interface ChatSidebarProps {
@@ -50,6 +74,7 @@ export function AppSidebar({
     null,
   );
   const deleteChat = useMutation(api.chats.deleteChat);
+  const togglePinChat = useMutation(api.chats.togglePinChat);
 
   const handleDeleteChat = async (chatId: Id<"chats">, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -69,6 +94,34 @@ export function AppSidebar({
       setDeletingChatId(null);
     }
   };
+
+  const handleTogglePin = async (chatId: Id<"chats">, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await togglePinChat({ chatId });
+    } catch (error) {
+      toast.error("Failed to pin/unpin chat");
+    }
+  };
+
+  const sortedChats = chats?.sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return b.lastMessageAt - a.lastMessageAt;
+  });
+
+  const pinnedChats = sortedChats?.filter((chat) => chat.pinned) || [];
+  const unpinnedChats = sortedChats?.filter((chat) => !chat.pinned) || [];
+
+  const todayChats = unpinnedChats.filter((chat) =>
+    isToday(chat.lastMessageAt),
+  );
+  const yesterdayChats = unpinnedChats.filter((chat) =>
+    isYesterday(chat.lastMessageAt),
+  );
+  const olderChats = unpinnedChats.filter(
+    (chat) => !isToday(chat.lastMessageAt) && !isYesterday(chat.lastMessageAt),
+  );
 
   return (
     <Sidebar {...props}>
@@ -118,43 +171,83 @@ export function AppSidebar({
               </div>
             ) : (
               <div className="p-2">
-                {chats &&
-                  chats.map((chat) => (
-                    <div
-                      key={chat._id}
-                      onClick={() => onSelectChat(chat._id)}
-                      className={`
-                  group relative p-3 rounded-lg cursor-pointer transition-colors mb-1
-                  ${
-                    selectedChatId === chat._id
-                      ? "bg-blue-50 border border-blue-200"
-                      : "hover:bg-gray-50 border border-transparent"
-                  }
-                `}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0 flex items-center gap-1">
-                          {chat.parentChatId && (
-                            <GitBranch className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                          )}
-                          <h3 className="font-medium text-sm text-gray-900 truncate">
-                            {chat.title}
-                          </h3>
-                        </div>
-                        <button
-                          onClick={(e) => handleDeleteChat(chat._id, e)}
-                          disabled={deletingChatId === chat._id}
-                          className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all"
-                        >
-                          {deletingChatId === chat._id ? (
-                            <div className="w-4 h-4 border-2 border-gray-300 border-t-red-500 rounded-full animate-spin" />
-                          ) : (
-                            <Trash2 className="size-4" />
-                          )}
-                        </button>
-                      </div>
+                <TooltipProvider>
+                  {pinnedChats.length > 0 && (
+                    <div className="mb-4">
+                      <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2 flex items-center gap-2">
+                        <Pin className="size-3" /> Pinned
+                      </h2>
+                      {pinnedChats.map((chat) => (
+                        <SidebarChat
+                          key={chat._id}
+                          chat={chat}
+                          selectedChatId={selectedChatId}
+                          onSelectChat={onSelectChat}
+                          deletingChatId={deletingChatId}
+                          handleDeleteChat={handleDeleteChat}
+                          handleTogglePin={handleTogglePin}
+                        />
+                      ))}
                     </div>
-                  ))}
+                  )}
+
+                  {todayChats.length > 0 && (
+                    <div className="mb-4">
+                      <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2 mt-4">
+                        Today
+                      </h2>
+                      {todayChats.map((chat) => (
+                        <SidebarChat
+                          key={chat._id}
+                          chat={chat}
+                          selectedChatId={selectedChatId}
+                          onSelectChat={onSelectChat}
+                          deletingChatId={deletingChatId}
+                          handleDeleteChat={handleDeleteChat}
+                          handleTogglePin={handleTogglePin}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {yesterdayChats.length > 0 && (
+                    <div className="mb-4">
+                      <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2 mt-4">
+                        Yesterday
+                      </h2>
+                      {yesterdayChats.map((chat) => (
+                        <SidebarChat
+                          key={chat._id}
+                          chat={chat}
+                          selectedChatId={selectedChatId}
+                          onSelectChat={onSelectChat}
+                          deletingChatId={deletingChatId}
+                          handleDeleteChat={handleDeleteChat}
+                          handleTogglePin={handleTogglePin}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {olderChats.length > 0 && (
+                    <div>
+                      <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2 mt-4">
+                        Older
+                      </h2>
+                      {olderChats.map((chat) => (
+                        <SidebarChat
+                          key={chat._id}
+                          chat={chat}
+                          selectedChatId={selectedChatId}
+                          onSelectChat={onSelectChat}
+                          deletingChatId={deletingChatId}
+                          handleDeleteChat={handleDeleteChat}
+                          handleTogglePin={handleTogglePin}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TooltipProvider>
               </div>
             )}
           </div>
