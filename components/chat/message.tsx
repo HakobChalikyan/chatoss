@@ -90,7 +90,6 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
   const createBranchedChat = useMutation(api.chats.createBranchedChat);
   const deleteMessage = useMutation(api.messages.deleteMessage);
   const sendMessage = useMutation(api.messages.sendMessage);
-  const currentChat = useQuery(api.chats.getChat, { chatId });
   const router = useRouter();
 
   // Auto-resize textarea and focus when editing starts
@@ -289,7 +288,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
           className={cn(
             "rounded-2xl px-5 py-4 relative group shadow-lg",
             message.role === "user"
-              ? "bg-gradient-to-br from-neutral-500 to-neutral-600 text-white glass border border-white/20"
+              ? "bg-gradient-to-br from-neutral-500 to-neutral-600 text-white glass border border-white/20 max-w-full"
               : "glass bg-white/20 backdrop-blur-xl border border-white/30 text-foreground hover:bg-white/25 w-full",
             isEditing && "ring-2 ring-neutral-400 shadow-xl pulse-glow",
           )}
