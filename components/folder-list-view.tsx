@@ -75,17 +75,22 @@ export function FolderListView({
   const deleteFolder = useMutation(api.folders.deleteFolder);
 
   const handleCreateFolder = useCallback(
-    async (parentId?: Id<"folders">) => {
-      if (!newFolderName.trim()) return;
+    async (parentId?: Id<"folders">, name?: string) => {
+      const folderName = name || newFolderName.trim();
+      if (!folderName) return;
 
       try {
         await createFolder({
-          name: newFolderName.trim(),
+          name: folderName,
           parentFolderId: parentId,
         });
-        setNewFolderName("");
-        setCreatingFolder(false);
-        setParentFolderId(undefined);
+
+        // Only clear state if this was from the main create folder input
+        if (!name) {
+          setNewFolderName("");
+          setCreatingFolder(false);
+          setParentFolderId(undefined);
+        }
 
         if (parentId) {
           expandFolder(parentId);
@@ -207,10 +212,7 @@ export function FolderListView({
           onToggle={() => toggleFolder(folder._id)}
           onRename={(name) => handleRenameFolder(folder._id, name)}
           onDelete={() => confirmDeleteFolder(folder._id, folder.name)}
-          onCreateSubfolder={() => {
-            setParentFolderId(folder._id);
-            setCreatingFolder(true);
-          }}
+          onCreateSubfolder={(name) => handleCreateFolder(folder._id, name)}
           chatCount={chatCount}
         >
           {isExpanded && (
@@ -232,6 +234,7 @@ export function FolderListView({
       handleRenameFolder,
       confirmDeleteFolder,
       renderChats,
+      handleCreateFolder,
     ],
   );
 
