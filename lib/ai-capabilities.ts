@@ -11,19 +11,21 @@ export const CAPABILITY_CONFIG = {
     label: "Image Upload and Analysis",
     color: "bg-green-100 text-green-600 border-green-200",
   },
-  webSearch: {
-    icon: Globe,
-    label: "Web Search",
-    color: "bg-blue-100 text-blue-600 border-blue-200",
-  },
-  fileUpload: {
-    icon: File,
-    label: "File Upload",
-    color: "bg-yellow-100 text-yellow-600 border-yellow-200",
-  },
-  imageGeneration: {
-    icon: ImageIcon,
-    label: "Image Generation",
-    color: "bg-pink-100 text-pink-600 border-pink-200",
-  },
+  // webSearch: {
+  //   icon: Globe,
+  //   label: "Web Search",
+  //   color: "bg-blue-100 text-blue-600 border-blue-200",
+  // },
+  // fileUpload: {
+  //   icon: File,
+  //   label: "File Upload",
+  //   color: "bg-yellow-100 text-yellow-600 border-yellow-200",
+  // },
+  // imageGeneration: {
+  //   icon: ImageIcon,
+  //   label: "Image Generation",
+  //   color: "bg-pink-100 text-pink-600 border-pink-200",
+  // },
 } as const;
+
+export type ActiveCapabilityKey = keyof typeof CAPABILITY_CONFIG;
