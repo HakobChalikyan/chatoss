@@ -247,7 +247,7 @@ export function AIModelSelector({
                         : "bg-neutral-50 text-neutral-400 border-neutral-200 hover:bg-neutral-100 hover:text-neutral-600",
                     )}
                   >
-                    Free Only
+                    Free
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="top">Show only free models</TooltipContent>
@@ -310,7 +310,7 @@ export function AIModelSelector({
                   key={model.id}
                   onClick={() => handleModelSelect(model)}
                   className={cn(
-                    "w-[calc(50%-6px)] md:w-[calc(25%-9px)] h-[9.5rem] p-3 rounded-xl transition-all duration-200 hover-lift border-2 flex flex-col justify-between gap-2",
+                    "cursor-pointer w-[calc(50%-6px)] md:w-[calc(25%-9px)] h-[9.5rem] p-3 rounded-xl transition-all duration-200 hover-lift border-2 flex flex-col justify-between gap-2",
                     selectedModel.id === model.id
                       ? "glass bg-neutral-100/50 border-neutral-300/50 shadow-sm dark:bg-neutral-700/50 dark:border-neutral-600/50"
                       : "bg-white border-neutral-100 hover:border-neutral-200 hover:bg-neutral-50 dark:bg-neutral-800/50 dark:border-neutral-700 dark:hover:border-neutral-600 dark:hover:bg-neutral-700/70",
@@ -356,8 +356,8 @@ export function AIModelSelector({
                 <span className="text-neutral-600 dark:text-neutral-300">
                   {activeFilters.size} capability filter
                   {activeFilters.size !== 1 ? "s" : ""}
-                  {showFreeModelsOnly ? " + Free Only" : ""}
-                  {selectedFamilies.length > 0 ? ` + Families: ${selectedFamilies.join(', ')}` : ""}
+                  {showFreeModelsOnly ? " + Free " : ""}
+                  {selectedFamilies.length > 0 ? ` + Families: ${selectedFamilies.join(', ')} ` : ""}
                    active
                 </span>
               )}
