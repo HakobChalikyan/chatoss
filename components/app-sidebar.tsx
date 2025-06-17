@@ -58,6 +58,7 @@ export function AppSidebar({
   );
   const deleteChat = useMutation(api.chats.deleteChat);
   const togglePinChat = useMutation(api.chats.togglePinChat);
+  const updateChatTitle = useMutation(api.chats.updateChatTitle);
   const folders = useQuery(api.folders.getUserFolders);
 
   const handleDeleteChat = async (chatId: Id<"chats">, e: React.MouseEvent) => {
@@ -85,6 +86,15 @@ export function AppSidebar({
       await togglePinChat({ chatId });
     } catch (error) {
       toast.error("Failed to pin/unpin chat");
+    }
+  };
+
+  const handleRenameChat = async (chatId: Id<"chats">, newTitle: string) => {
+    try {
+      await updateChatTitle({ chatId, title: newTitle });
+      toast.success("Chat renamed successfully");
+    } catch (error) {
+      toast.error("Failed to rename chat");
     }
   };
 
@@ -148,6 +158,7 @@ export function AppSidebar({
                   deletingChatId={deletingChatId}
                   handleDeleteChat={handleDeleteChat}
                   handleTogglePin={handleTogglePin}
+                  handleRenameChat={handleRenameChat}
                   searchQuery={searchQuery}
                 />
               </div>
@@ -162,6 +173,7 @@ export function AppSidebar({
               deletingChatId={deletingChatId}
               handleDeleteChat={handleDeleteChat}
               handleTogglePin={handleTogglePin}
+              handleRenameChat={handleRenameChat}
             />
           </TabsContent>
         </Tabs>

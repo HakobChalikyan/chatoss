@@ -1,11 +1,13 @@
-import React, { useState, useCallback } from "react";
+"use client";
+
+import type React from "react";
+import { useState, useCallback } from "react";
 import { FolderPlus } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { cn } from "@/lib/utils";
 import { useFolderExpansion } from "@/hooks/use-folder-expansion";
 import { useFolderSearch } from "@/hooks/use-folder-search";
 import { ConfirmationDialog } from "./confirmation-dialog";
@@ -36,6 +38,7 @@ interface FolderListViewProps {
   deletingChatId: Id<"chats"> | null;
   handleDeleteChat: (chatId: Id<"chats">, e: React.MouseEvent) => Promise<void>;
   handleTogglePin: (chatId: Id<"chats">, e: React.MouseEvent) => Promise<void>;
+  handleRenameChat: (chatId: Id<"chats">, newTitle: string) => Promise<void>;
 }
 
 export function FolderListView({
@@ -46,6 +49,7 @@ export function FolderListView({
   deletingChatId,
   handleDeleteChat,
   handleTogglePin,
+  handleRenameChat,
 }: FolderListViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [creatingFolder, setCreatingFolder] = useState(false);
@@ -151,7 +155,7 @@ export function FolderListView({
   );
 
   const renderChats = useCallback(
-    (folderId: Id<"folders"> | undefined, level: number = 0) => {
+    (folderId: Id<"folders"> | undefined, level = 0) => {
       const folderChats = getChatsByFolder(folderId);
 
       if (folderChats.length === 0) {
@@ -169,6 +173,7 @@ export function FolderListView({
               deletingChatId={deletingChatId}
               handleDeleteChat={handleDeleteChat}
               handleTogglePin={handleTogglePin}
+              handleRenameChat={handleRenameChat}
               level={level}
             />
           ))}
@@ -181,12 +186,13 @@ export function FolderListView({
       deletingChatId,
       handleDeleteChat,
       handleTogglePin,
+      handleRenameChat,
       getChatsByFolder,
     ],
   );
 
   const renderFolder = useCallback(
-    (folder: Folder, level: number = 0) => {
+    (folder: Folder, level = 0) => {
       const childFolders =
         filteredFolders?.filter((f) => f.parentFolderId === folder._id) || [];
       const isExpanded = expandedFolders.has(folder._id);
@@ -244,8 +250,6 @@ export function FolderListView({
 
   return (
     <div className="space-y-4">
-      {/* <SearchBar onSearch={setSearchQuery} /> */}
-
       <div className="space-y-2">
         {/* Create Folder Button */}
         <div className="px-2">

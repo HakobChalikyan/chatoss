@@ -1,3 +1,4 @@
+import type React from "react";
 import { Pin, Search } from "lucide-react";
 import { SidebarChat } from "./sidebar-chat";
 import { Skeleton } from "./ui/skeleton";
@@ -19,6 +20,7 @@ interface ChatListViewProps {
   deletingChatId: Id<"chats"> | null;
   handleDeleteChat: (chatId: Id<"chats">, e: React.MouseEvent) => Promise<void>;
   handleTogglePin: (chatId: Id<"chats">, e: React.MouseEvent) => Promise<void>;
+  handleRenameChat: (chatId: Id<"chats">, newTitle: string) => Promise<void>;
   searchQuery: string;
 }
 
@@ -50,6 +52,7 @@ export function ChatListView({
   deletingChatId,
   handleDeleteChat,
   handleTogglePin,
+  handleRenameChat,
   searchQuery,
 }: ChatListViewProps) {
   if (!chats) {
@@ -110,6 +113,7 @@ export function ChatListView({
               deletingChatId={deletingChatId}
               handleDeleteChat={handleDeleteChat}
               handleTogglePin={handleTogglePin}
+              handleRenameChat={handleRenameChat}
             />
           ))}
         </div>
@@ -129,6 +133,7 @@ export function ChatListView({
               deletingChatId={deletingChatId}
               handleDeleteChat={handleDeleteChat}
               handleTogglePin={handleTogglePin}
+              handleRenameChat={handleRenameChat}
             />
           ))}
         </div>
@@ -148,6 +153,7 @@ export function ChatListView({
               deletingChatId={deletingChatId}
               handleDeleteChat={handleDeleteChat}
               handleTogglePin={handleTogglePin}
+              handleRenameChat={handleRenameChat}
             />
           ))}
         </div>
@@ -167,6 +173,7 @@ export function ChatListView({
               deletingChatId={deletingChatId}
               handleDeleteChat={handleDeleteChat}
               handleTogglePin={handleTogglePin}
+              handleRenameChat={handleRenameChat}
             />
           ))}
         </div>
