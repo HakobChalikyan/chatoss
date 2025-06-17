@@ -194,6 +194,27 @@ export function FolderListView({
     setDropTargetFolderId(null);
   };
 
+  const handleFolderDragOver = (
+    e: React.DragEvent,
+    folderId: Id<"folders">,
+  ) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDropTargetFolderId(folderId);
+  };
+
+  const handleFolderDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    // Only clear the drop target if we're leaving the folder area completely
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      setDropTargetFolderId(null);
+    }
+  };
+
   const renderChats = useCallback(
     (folderId: Id<"folders"> | undefined, level = 0) => {
       const folderChats = getChatsByFolder(folderId);
@@ -256,8 +277,8 @@ export function FolderListView({
           chatCount={chatCount}
           isDropTarget={isDropTarget}
           onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={() => setDropTargetFolderId(null)}
+          onDragOver={(e) => handleFolderDragOver(e, folder._id)}
+          onDragLeave={handleFolderDragLeave}
         >
           {isExpanded && (
             <>
@@ -281,7 +302,8 @@ export function FolderListView({
       handleCreateFolder,
       dropTargetFolderId,
       handleDrop,
-      handleDragOver,
+      handleFolderDragOver,
+      handleFolderDragLeave,
     ],
   );
 
