@@ -45,6 +45,8 @@ interface FolderItemProps {
   onDrop?: (e: React.DragEvent, folderId: Id<"folders">) => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDragLeave?: (e: React.DragEvent) => void;
+  onDragStart?: (e: React.DragEvent, folder: FolderType) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
 }
 
 export function FolderItem({
@@ -61,6 +63,8 @@ export function FolderItem({
   onDrop,
   onDragOver,
   onDragLeave,
+  onDragStart,
+  onDragEnd,
 }: FolderItemProps) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState(folder.name);
@@ -186,6 +190,25 @@ export function FolderItem({
     }
   };
 
+  const handleDragStart = (e: React.DragEvent) => {
+    e.stopPropagation();
+    if (onDragStart) {
+      onDragStart(e, folder);
+    }
+    e.dataTransfer.setData(
+      "application/json",
+      JSON.stringify({ type: "folder", id: folder._id }),
+    );
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    e.stopPropagation();
+    if (onDragEnd) {
+      onDragEnd(e);
+    }
+  };
+
   return (
     <div
       className={cn(
@@ -204,6 +227,9 @@ export function FolderItem({
           isRenaming && "ring-2 ring-neutral-400/50",
         )}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
+        draggable
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
       >
         <Button
           variant="ghost"

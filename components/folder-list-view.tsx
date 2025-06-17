@@ -64,6 +64,7 @@ export function FolderListView({
     folderName: string;
   }>({ isOpen: false, folderId: null, folderName: "" });
   const [draggedChat, setDraggedChat] = useState<Chat | null>(null);
+  const [draggedFolder, setDraggedFolder] = useState<Folder | null>(null);
   const [dropTargetFolderId, setDropTargetFolderId] =
     useState<Id<"folders"> | null>(null);
 
@@ -164,12 +165,17 @@ export function FolderListView({
     [getChatsByFolder],
   );
 
-  const handleDragStart = (e: React.DragEvent, chat: Chat) => {
-    setDraggedChat(chat);
+  const handleDragStart = (e: React.DragEvent, item: Chat | Folder) => {
+    if ("title" in item) {
+      setDraggedChat(item);
+    } else {
+      setDraggedFolder(item);
+    }
   };
 
   const handleDragEnd = () => {
     setDraggedChat(null);
+    setDraggedFolder(null);
     setDropTargetFolderId(null);
   };
 
@@ -180,17 +186,48 @@ export function FolderListView({
 
   const handleDrop = async (e: React.DragEvent, folderId: Id<"folders">) => {
     e.preventDefault();
-    if (!draggedChat) return;
 
-    try {
-      await moveChatToFolder({ chatId: draggedChat._id, folderId });
-      // Expand the target folder to show the moved chat
-      expandFolder(folderId);
-    } catch (error) {
-      console.error("Failed to move chat:", error);
+    if (draggedChat) {
+      try {
+        await moveChatToFolder({ chatId: draggedChat._id, folderId });
+        // Expand the target folder to show the moved chat
+        expandFolder(folderId);
+      } catch (error) {
+        console.error("Failed to move chat:", error);
+      }
+    } else if (draggedFolder) {
+      try {
+        // Prevent moving a folder into itself or its descendants
+        if (draggedFolder._id === folderId) {
+          console.error("Cannot move folder into itself");
+          return;
+        }
+
+        // Check if target folder is a descendant of dragged folder
+        let currentFolder = folders?.find((f) => f._id === folderId);
+        while (currentFolder?.parentFolderId) {
+          if (currentFolder.parentFolderId === draggedFolder._id) {
+            console.error("Cannot move folder into its own descendant");
+            return;
+          }
+          currentFolder = folders?.find(
+            (f) => f._id === currentFolder?.parentFolderId,
+          );
+        }
+
+        await updateFolder({
+          folderId: draggedFolder._id,
+          parentFolderId: folderId,
+        });
+        // Expand the target folder to show the moved folder
+        expandFolder(folderId);
+      } catch (error) {
+        console.error("Failed to move folder:", error);
+      }
     }
 
     setDraggedChat(null);
+    setDraggedFolder(null);
     setDropTargetFolderId(null);
   };
 
@@ -200,6 +237,26 @@ export function FolderListView({
   ) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
+
+    // Don't allow dropping if we're dragging a folder and the target is the same folder or its descendant
+    if (draggedFolder) {
+      if (draggedFolder._id === folderId) {
+        e.dataTransfer.dropEffect = "none";
+        return;
+      }
+
+      let currentFolder = folders?.find((f) => f._id === folderId);
+      while (currentFolder?.parentFolderId) {
+        if (currentFolder.parentFolderId === draggedFolder._id) {
+          e.dataTransfer.dropEffect = "none";
+          return;
+        }
+        currentFolder = folders?.find(
+          (f) => f._id === currentFolder?.parentFolderId,
+        );
+      }
+    }
+
     setDropTargetFolderId(folderId);
   };
 
@@ -279,6 +336,8 @@ export function FolderListView({
           onDrop={handleDrop}
           onDragOver={(e) => handleFolderDragOver(e, folder._id)}
           onDragLeave={handleFolderDragLeave}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
         >
           {isExpanded && (
             <>
@@ -304,6 +363,9 @@ export function FolderListView({
       handleDrop,
       handleFolderDragOver,
       handleFolderDragLeave,
+      handleDragStart,
+      handleDragEnd,
+      folders,
     ],
   );
 
