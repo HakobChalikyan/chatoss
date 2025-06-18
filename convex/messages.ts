@@ -183,7 +183,7 @@ export const generateAIResponseStreaming = internalAction({
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.statusText}`);
       }
 
       const reader = response.body?.getReader();
