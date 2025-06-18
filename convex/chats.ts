@@ -118,7 +118,7 @@ export const createBranchedChat = mutation({
     // Create a new chat for the branch
     const newChatId = await ctx.db.insert("chats", {
       userId,
-      title: `Branched: ${parentChat.title}`,
+      title: parentChat.title,
       lastMessageAt: Date.now(),
       parentChatId: args.parentChatId,
       branchedFromMessageId: args.branchedFromMessageId,
