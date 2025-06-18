@@ -1,7 +1,7 @@
 import { v } from "convex/values";
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { internal } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 
 export const createChat = mutation({
   args: {
@@ -14,10 +14,26 @@ export const createChat = mutation({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
+    // Get the user's API key
+    const apiKeyData = await ctx.runQuery(api.apiKeys.getApiKey, {
+      userId,
+    });
+
+    if (!apiKeyData?.apiKey) {
+      throw new Error("No API key found");
+    }
+
     const chatId = await ctx.db.insert("chats", {
       userId,
-      title: args.title,
+      title: "",
       lastMessageAt: Date.now(),
+    });
+
+    // Generate a title using the AI model
+    ctx.scheduler.runAfter(0, internal.messages.generateChatTitle, {
+      message: args.initialMessage,
+      apiKey: apiKeyData.apiKey,
+      chatId,
     });
 
     // Create message parts from content and fileIds
@@ -307,6 +323,18 @@ export const updateChatTitle = mutation({
       throw new Error("Chat not found or unauthorized");
     }
 
+    await ctx.db.patch(args.chatId, {
+      title: args.title,
+    });
+  },
+});
+
+export const updateChatTitleInternal = internalMutation({
+  args: {
+    chatId: v.id("chats"),
+    title: v.string(),
+  },
+  handler: async (ctx, args) => {
     await ctx.db.patch(args.chatId, {
       title: args.title,
     });

@@ -228,12 +228,15 @@ export const generateAIResponseStreaming = internalAction({
               }
 
               if (content || reasoning) {
-                await ctx.runMutation(internal.messages.updateStreamingMessage, {
-                  messageId,
-                  content: fullContent,
-                  reasoning: fullReasoning,
-                  isComplete: false,
-                });
+                await ctx.runMutation(
+                  internal.messages.updateStreamingMessage,
+                  {
+                    messageId,
+                    content: fullContent,
+                    reasoning: fullReasoning,
+                    isComplete: false,
+                  },
+                );
               }
             } catch (e) {
               console.error("Error parsing chunk:", e);
@@ -277,7 +280,10 @@ export const generateAIResponseStreaming = internalAction({
         console.error("AI response error:", error);
         await ctx.runMutation(internal.messages.updateStreamingMessage, {
           messageId,
-          content: "I apologize, but I encountered an error generating a response. Please try again." + "\n\n" + error,
+          content:
+            "I apologize, but I encountered an error generating a response. Please try again." +
+            "\n\n" +
+            error,
           isComplete: true,
         });
       }
@@ -485,5 +491,66 @@ export const deleteMessage = mutation({
     }
 
     await ctx.db.delete(args.messageId);
+  },
+});
+
+export const generateChatTitle = internalAction({
+  args: {
+    message: v.string(),
+    apiKey: v.string(),
+    chatId: v.id("chats"),
+  },
+  handler: async (ctx, args) => {
+    try {
+      const response = await fetch(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${args.apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "meta-llama/llama-4-scout:free",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are a helpful assistant that generates concise, descriptive titles for chat conversations. Generate a title that is 3-6 words long based on the user's message. Only respond with the title, nothing else.",
+              },
+              {
+                role: "user",
+                content: args.message,
+              },
+            ],
+            reasoning: {
+              enabled: false,
+            },
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const title = data.choices[0]?.message?.content?.trim() || "New Chat";
+
+      await ctx.runMutation(internal.chats.updateChatTitleInternal, {
+        chatId: args.chatId,
+        title: title,
+      });
+
+      // Ensure the title is not too long
+      return title.length > 50 ? title.slice(0, 47) + "..." : title;
+    } catch (error) {
+      console.error("Error generating title:", error);
+      await ctx.runMutation(internal.chats.updateChatTitleInternal, {
+        chatId: args.chatId,
+        title: "New Chat",
+      });
+      return "New Chat";
+    }
   },
 });
