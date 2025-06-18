@@ -322,6 +322,7 @@ export function ChatInterface({
               _id: branch._id,
               branchedFromMessageId: branch.branchedFromMessageId,
               title: branch.title,
+              _creationTime: branch._creationTime,
             }))}
           />
         )}

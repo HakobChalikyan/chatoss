@@ -23,6 +23,7 @@ interface MessagesProps {
     _id: Id<"chats">;
     branchedFromMessageId?: Id<"messages">;
     title: string;
+    _creationTime: number;
   }>;
 }
 

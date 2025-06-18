@@ -53,6 +53,7 @@ interface MessageProps {
     _id: Id<"chats">;
     branchedFromMessageId?: Id<"messages">;
     title: string;
+    _creationTime: number;
   }>;
 }
 
@@ -79,6 +80,16 @@ const formatTime = (timestamp: number) => {
   return new Date(timestamp).toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
+  });
+};
+
+const formatBranchTime = (timestamp: number) => {
+  return new Date(timestamp).toLocaleTimeString([], {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
   });
 };
 
@@ -457,7 +468,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
               {renderMessageFiles(message.files)}
 
               {branchedChats && branchedChats.length > 0 && (
-                <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-white/20">
+                <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-white/90">
                   <span
                     className={cn(
                       "text-xs flex items-center gap-2 font-medium",
@@ -485,7 +496,11 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
                         rel="noreferrer"
                       >
                         <MessageSquare className="w-3 h-3" />
-                        {branch.title}
+
+                        <div className="flex flex-col">
+                          <span>{branch.title}</span>
+                          <span>{formatBranchTime(branch._creationTime)}</span>
+                        </div>
                       </a>
                     ))}
                   </div>

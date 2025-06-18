@@ -112,7 +112,7 @@ export function RetryDropdown({
                     className={cn(
                       "flex items-center justify-between gap-2",
                       model.id === currentModel.id &&
-                        "text-pink-600 font-semibold",
+                        "text-indigo-500 font-semibold",
                     )}
                   >
                     <div className="flex items-center justify-between w-full gap-2">
