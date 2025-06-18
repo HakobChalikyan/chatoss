@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   title: "ChatOSS - AI Chat Interface",
   description: "Chat with any model",
   icons: {
-    icon: "/convex.svg",
+    icon: "/message.svg",
   },
 };
 
