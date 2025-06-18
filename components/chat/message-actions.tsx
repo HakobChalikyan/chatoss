@@ -1,5 +1,12 @@
 import { cn } from "@/lib/utils";
-import { Check, Copy, Pencil, GitBranch, ClipboardList } from "lucide-react";
+import {
+  Check,
+  Copy,
+  Pencil,
+  GitBranch,
+  ClipboardList,
+  RotateCcw,
+} from "lucide-react";
 import { useState } from "react";
 import { Id } from "@/convex/_generated/dataModel";
 import {
@@ -7,6 +14,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { RetryDropdown } from "./retry-dropdown";
+import { AIModel } from "@/lib/ai-models";
+import { Button } from "@/components/ui/button";
 
 interface MessageActionsProps {
   content: string;
@@ -14,6 +24,9 @@ interface MessageActionsProps {
   onEdit?: () => void;
   onBranch?: () => void;
   messageId?: Id<"messages">;
+  currentModel?: AIModel;
+  onRetrySame?: () => void;
+  onRetryModel?: (model: AIModel) => void;
 }
 
 export function MessageActions({
@@ -22,6 +35,9 @@ export function MessageActions({
   onEdit,
   onBranch,
   messageId,
+  currentModel,
+  onRetrySame,
+  onRetryModel,
 }: MessageActionsProps) {
   const [copied, setCopied] = useState(false);
   const [copiedMarkdown, setCopiedMarkdown] = useState(false);
@@ -85,6 +101,22 @@ export function MessageActions({
           </TooltipTrigger>
           <TooltipContent>Edit message</TooltipContent>
         </Tooltip>
+      )}
+      {role === "user" && currentModel && onRetrySame && onRetryModel && (
+        <RetryDropdown
+          currentModel={currentModel}
+          onRetrySame={onRetrySame}
+          onSelect={onRetryModel}
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            className="p-1 rounded-md hover:bg-neutral-200/50 transition-colors"
+            aria-label="Retry message"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </Button>
+        </RetryDropdown>
       )}
       {role === "assistant" && onBranch && (
         <Tooltip>

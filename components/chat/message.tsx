@@ -30,6 +30,8 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { AI_MODELS, AIModel } from "@/lib/ai-models";
+import { RetryDropdown } from "./retry-dropdown";
 
 interface MessageProps {
   message: {
@@ -220,6 +222,41 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
   };
 
   const isCancelled = message.content.endsWith("*Response was cancelled*");
+
+  // Retry logic
+  const handleRetrySame = async () => {
+    try {
+      await deleteMessage({ messageId: message._id });
+      await sendMessage({
+        chatId,
+        content: message.content,
+        fileIds:
+          message.files && message.files.length > 0
+            ? message.files.map((f) => f.id)
+            : undefined,
+        model: message.model,
+      });
+    } catch (error) {
+      console.error("Error retrying message:", error);
+    }
+  };
+
+  const handleRetryModel = async (model: AIModel) => {
+    try {
+      await deleteMessage({ messageId: message._id });
+      await sendMessage({
+        chatId,
+        content: message.content,
+        fileIds:
+          message.files && message.files.length > 0
+            ? message.files.map((f) => f.id)
+            : undefined,
+        model: model.id,
+      });
+    } catch (error) {
+      console.error("Error retrying message with model:", error);
+    }
+  };
 
   return (
     <>
@@ -483,6 +520,15 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
             onEdit={message.role === "user" ? handleEdit : undefined}
             onBranch={message.role === "assistant" ? handleBranch : undefined}
             messageId={message._id}
+            currentModel={
+              message.role === "user"
+                ? AI_MODELS.find((m) => m.id === message.model) || AI_MODELS[0]
+                : undefined
+            }
+            onRetrySame={message.role === "user" ? handleRetrySame : undefined}
+            onRetryModel={
+              message.role === "user" ? handleRetryModel : undefined
+            }
           />
         )}
       </div>
