@@ -79,7 +79,7 @@ export function ChatInput({
 
         <div className="flex flex-col">
           <Textarea
-            placeholder="Type your message here... ✨"
+            placeholder="Type your message here..."
             className={cn(
               "min-h-24 max-h-64 resize-none border-0 p-4 focus-visible:ring-0 shadow-none",
               "bg-transparent text-foreground placeholder:text-neutral-600 dark:placeholder:text-muted-foreground/70",

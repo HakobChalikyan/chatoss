@@ -238,9 +238,6 @@ export function ChatInterface({
             {/* Hero Section */}
             <div className="text-center mb-6 space-y-2">
               <div className="inline-flex items-center gap-2 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-neutral-500 to-neutral-600 dark:from-neutral-400 dark:to-neutral-500 flex items-center justify-center float">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
                 <h1 className="text-3xl font-bold gradient-text">
                   Hey there! 👋
                 </h1>
