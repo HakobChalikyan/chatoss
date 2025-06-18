@@ -58,23 +58,38 @@ After setup, the Convex dashboard will be launched.
 
 ### 3. Environment Variables
 
-Convex uses cloud environment variables that can be set from the CLI or project settings dashboard.
+Convex uses cloud environment variables that can be set from the CLI or your project settings dashboard. **You do not need to add these to a local `.env` file; Convex manages them in the cloud.**
 
 #### Required Variables
 
-```bash
-npx convex env set AUTH_GOOGLE_ID <your-google-client-id>
-npx convex env set AUTH_GOOGLE_SECRET <your-google-secret>
-npx convex env set ENCRYPTION_KEY <your-encryption-key>
-```
+1.  **Application URL:**
+    ```bash
+    npx convex env set SITE_URL http://localhost:3000
+    ```
+    *This is the URL where your application will be accessible.*
 
-To generate a secure `ENCRYPTION_KEY`, run:
+2.  **Google Authentication Credentials:**
+    ```bash
+    npx convex env set AUTH_GOOGLE_ID <your-google-client-id>
+    npx convex env set AUTH_GOOGLE_SECRET <your-google-secret>
+    ```
+    *These are obtained from the Google Cloud Console when setting up OAuth 2.0 credentials for your application. For detailed steps, refer to [https://labs.convex.dev/auth/config/oauth/google](https://labs.convex.dev/auth/config/oauth/google).*
 
-```bash
-openssl rand -hex 16
-```
+3.  **Data Encryption Key:**
+    ```bash
+    npx convex env set ENCRYPTION_KEY <your-encryption-key>
+    ```
+    *This key is used to encrypt sensitive data stored in your Convex backend. To generate a secure 16-byte hexadecimal key, run:*
+    ```bash
+    openssl rand -hex 16
+    ```
 
-> You don't need to add these to `.env.local`. Convex will handle them in the cloud.
+4.  **Convex Auth JWT Keys:**
+    *   First, generate the private and public key pair by running:
+        ```bash
+        node generateKeys.mjs
+        ```
+    *   This command will output two keys. **JWT_PRIVATE_KEY** and **JWKS**. Copy and paste them into your Convex environment variables.
 
 ---
 
