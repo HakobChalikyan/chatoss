@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, ReactNode } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Check, Copy, Download } from "lucide-react";
@@ -13,8 +13,21 @@ import {
 
 interface CodeBlockProps {
   className?: string;
-  children: any;
+  children: ReactNode;
   inline?: boolean;
+}
+
+// Extend Window interface to include showSaveFilePicker
+declare global {
+  interface Window {
+    showSaveFilePicker?: (options: {
+      suggestedName?: string;
+      types?: Array<{
+        description: string;
+        accept: Record<string, string[]>;
+      }>;
+    }) => Promise<FileSystemFileHandle>;
+  }
 }
 
 export function CodeBlock({
@@ -41,7 +54,7 @@ export function CodeBlock({
     // Check if the File System Access API is supported
     if ("showSaveFilePicker" in window) {
       try {
-        const fileHandle = await (window as any).showSaveFilePicker({
+        const fileHandle = await window.showSaveFilePicker!({
           suggestedName: defaultName,
           types: [
             {

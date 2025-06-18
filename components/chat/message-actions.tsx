@@ -34,7 +34,6 @@ export function MessageActions({
   role,
   onEdit,
   onBranch,
-  messageId,
   currentModel,
   onRetrySame,
   onRetryModel,

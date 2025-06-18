@@ -15,7 +15,13 @@ interface MessagesProps {
     files?: Array<{
       id: Id<"_storage">;
       url: string | null;
-      metadata: any;
+      metadata: {
+        _id: Id<"_storage">;
+        _creationTime: number;
+        contentType?: string | undefined | undefined;
+        sha256: string;
+        size: number;
+      };
     }>;
   }>;
   chatId: Id<"chats">;

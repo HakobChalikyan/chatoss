@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -24,7 +23,6 @@ export function FolderContextMenu({
   children,
   currentFolderId,
 }: FolderContextMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
   const folders = useQuery(api.folders.getUserFolders);
   const moveChatToFolder = useMutation(api.folders.moveChatToFolder);
 
@@ -33,9 +31,9 @@ export function FolderContextMenu({
       await moveChatToFolder({ chatId, folderId });
       toast.success("Chat moved successfully");
     } catch (error) {
+      console.error("Failed to move chat:", error);
       toast.error("Failed to move chat");
     }
-    setIsOpen(false);
   };
 
   return (

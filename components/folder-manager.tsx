@@ -40,6 +40,7 @@ export function FolderManager() {
       setIsCreateOpen(false);
       toast.success("Folder created successfully");
     } catch (error) {
+      console.error("Failed to create folder:", error);
       toast.error("Failed to create folder");
     }
   };
@@ -55,6 +56,7 @@ export function FolderManager() {
       setIsEditOpen(false);
       toast.success("Folder updated successfully");
     } catch (error) {
+      console.error("Failed to update folder:", error);
       toast.error("Failed to update folder");
     }
   };
@@ -64,6 +66,7 @@ export function FolderManager() {
       await deleteFolder({ folderId });
       toast.success("Folder deleted successfully");
     } catch (error) {
+      console.error("Failed to delete folder:", error);
       toast.error("Failed to delete folder");
     }
   };

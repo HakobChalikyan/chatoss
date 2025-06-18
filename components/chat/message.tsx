@@ -31,7 +31,6 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { AI_MODELS, AIModel } from "@/lib/ai-models";
-import { RetryDropdown } from "./retry-dropdown";
 
 interface MessageProps {
   message: {
@@ -45,7 +44,13 @@ interface MessageProps {
     files?: Array<{
       id: Id<"_storage">;
       url: string | null;
-      metadata: any;
+      metadata: {
+        _id: Id<"_storage">;
+        _creationTime: number;
+        contentType?: string | undefined | undefined;
+        sha256: string;
+        size: number;
+      };
     }>;
   };
   chatId: Id<"chats">;
@@ -223,7 +228,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
             key={index}
             attachment={{
               url: file.url || "",
-              name: file.metadata?.fileName || "File",
+              name: "Image",
               contentType: file.metadata?.contentType || "",
             }}
             isUploading={false}
@@ -290,7 +295,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
               Edit Message
             </DialogTitle>
             <DialogDescription className="text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
-              Choose how you'd like to handle your edited message:
+              Choose how you&apos;d like to handle your edited message:
             </DialogDescription>
           </DialogHeader>
 

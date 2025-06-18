@@ -71,9 +71,11 @@ export function AppSidebar({
     try {
       await deleteChat({ chatId });
       if (selectedChatId === chatId) {
+        // eslint-disable-next-line
         onSelectChat(null as any);
       }
     } catch (error) {
+      console.error("Failed to delete chat:", error);
       toast.error("Failed to delete chat");
     } finally {
       setDeletingChatId(null);
@@ -85,6 +87,7 @@ export function AppSidebar({
     try {
       await togglePinChat({ chatId });
     } catch (error) {
+      console.error("Failed to pin/unpin chat:", error);
       toast.error("Failed to pin/unpin chat");
     }
   };
@@ -94,6 +97,7 @@ export function AppSidebar({
       await updateChatTitle({ chatId, title: newTitle });
       toast.success("Chat renamed successfully");
     } catch (error) {
+      console.error("Failed to rename chat:", error);
       toast.error("Failed to rename chat");
     }
   };

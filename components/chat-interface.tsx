@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Sparkles, ArrowDown } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 import { useMutation, useQuery } from "convex/react";
 import { toast } from "sonner";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -136,6 +136,7 @@ export function ChatInterface({
 
         onChatCreated?.(chatId);
       } catch (error) {
+        console.error("Failed to create chat:", error);
         toast.error("Failed to create chat");
       } finally {
         setIsCreating(false);
@@ -170,6 +171,7 @@ export function ChatInterface({
           model: selectedModel.id,
         });
       } catch (error) {
+        console.error("Failed to send message:", error);
         toast.error("Failed to send message");
       }
     }
@@ -243,7 +245,7 @@ export function ChatInterface({
                 </h1>
               </div>
               <p className="text-lg text-muted-foreground max-w-xl">
-                Ready to explore, create, and discover? Let's dive into
+                Ready to explore, create, and discover? Let&apos;s dive into
                 something amazing together!
               </p>
             </div>

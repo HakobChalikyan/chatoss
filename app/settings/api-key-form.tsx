@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Key, Check, Edit } from "lucide-react";
+import { Check, Edit } from "lucide-react";
 
 export function ApiKeyForm() {
   const [apiKey, setApiKey] = useState("");
@@ -25,6 +25,7 @@ export function ApiKeyForm() {
       setIsEditing(false);
       toast("API key saved successfully");
     } catch (error) {
+      console.error("Failed to save API key:", error);
       toast("Failed to save API key");
     }
   };

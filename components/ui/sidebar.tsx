@@ -85,7 +85,7 @@ function SidebarProvider({
     maxWidth,
   } = useSidebarState(defaultOpen);
 
-  const { isResizing, handleMouseDown } = useSidebarResize({
+  const { isResizing } = useSidebarResize({
     width,
     setWidth,
     minWidth,
@@ -198,7 +198,7 @@ function SidebarProvider({
 }
 
 function SidebarResizeHandle() {
-  const { handleMouseDown, isResizing } = useSidebarResize({
+  const { isResizing } = useSidebarResize({
     width: 0,
     setWidth: () => {},
     minWidth: 0,

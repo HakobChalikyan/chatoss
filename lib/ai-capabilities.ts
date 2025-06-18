@@ -1,4 +1,4 @@
-import { Brain, ImageIcon, Globe, File } from "lucide-react";
+import { Brain, ImageIcon } from "lucide-react";
 
 export const CAPABILITY_CONFIG = {
   reasoning: {

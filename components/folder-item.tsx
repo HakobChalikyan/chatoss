@@ -59,7 +59,6 @@ export function FolderItem({
   onCreateSubfolder,
   children,
   chatCount = 0,
-  isDropTarget = false,
   onDrop,
   onDragOver,
   onDragLeave,
