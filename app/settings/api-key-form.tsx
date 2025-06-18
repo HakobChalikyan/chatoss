@@ -64,7 +64,6 @@ export function ApiKeyForm() {
           htmlFor="apiKey"
           className="text-neutral-700 dark:text-neutral-300 flex items-center gap-2"
         >
-          <Key className="w-4 h-4" />
           OpenRouter API Key
         </Label>
         <Input
