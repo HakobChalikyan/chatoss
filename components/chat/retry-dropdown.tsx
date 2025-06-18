@@ -5,13 +5,10 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { AI_MODELS, AIModel } from "@/lib/ai-models";
 import { RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";

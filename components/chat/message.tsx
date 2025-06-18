@@ -92,6 +92,7 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
   const createBranchedChat = useMutation(api.chats.createBranchedChat);
   const deleteMessage = useMutation(api.messages.deleteMessage);
   const sendMessage = useMutation(api.messages.sendMessage);
+  const retryAssistantMessage = useMutation(api.messages.retryAssistantMessage);
   const router = useRouter();
 
   // Auto-resize textarea and focus when editing starts
@@ -226,16 +227,21 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
   // Retry logic
   const handleRetrySame = async () => {
     try {
-      await deleteMessage({ messageId: message._id });
-      await sendMessage({
-        chatId,
-        content: message.content,
-        fileIds:
-          message.files && message.files.length > 0
-            ? message.files.map((f) => f.id)
-            : undefined,
-        model: message.model,
-      });
+      if (message.role === "assistant") {
+        await retryAssistantMessage({
+          messageId: message._id,
+          model: message.model,
+        });
+      } else {
+        // For user messages, keep the existing behavior
+        await deleteMessage({ messageId: message._id });
+        await sendMessage({
+          chatId,
+          content: message.content,
+          fileIds: message.files?.map((f) => f.id),
+          model: message.model,
+        });
+      }
     } catch (error) {
       console.error("Error retrying message:", error);
     }
@@ -243,16 +249,21 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
 
   const handleRetryModel = async (model: AIModel) => {
     try {
-      await deleteMessage({ messageId: message._id });
-      await sendMessage({
-        chatId,
-        content: message.content,
-        fileIds:
-          message.files && message.files.length > 0
-            ? message.files.map((f) => f.id)
-            : undefined,
-        model: model.id,
-      });
+      if (message.role === "assistant") {
+        await retryAssistantMessage({
+          messageId: message._id,
+          model: model.id,
+        });
+      } else {
+        // For user messages, keep the existing behavior
+        await deleteMessage({ messageId: message._id });
+        await sendMessage({
+          chatId,
+          content: message.content,
+          fileIds: message.files?.map((f) => f.id),
+          model: model.id,
+        });
+      }
     } catch (error) {
       console.error("Error retrying message with model:", error);
     }
@@ -521,14 +532,10 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
             onBranch={message.role === "assistant" ? handleBranch : undefined}
             messageId={message._id}
             currentModel={
-              message.role === "user"
-                ? AI_MODELS.find((m) => m.id === message.model) || AI_MODELS[0]
-                : undefined
+              AI_MODELS.find((m) => m.id === message.model) || AI_MODELS[0]
             }
-            onRetrySame={message.role === "user" ? handleRetrySame : undefined}
-            onRetryModel={
-              message.role === "user" ? handleRetryModel : undefined
-            }
+            onRetrySame={handleRetrySame}
+            onRetryModel={handleRetryModel}
           />
         )}
       </div>

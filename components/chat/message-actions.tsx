@@ -83,26 +83,11 @@ export function MessageActions({
   return (
     <div
       className={cn(
-        "flex gap-2 p-2",
+        "flex gap-1 p-2",
         role === "user" ? "self-end" : "self-start",
       )}
     >
-      {role === "user" && onEdit && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              onClick={onEdit}
-              className={cn(
-                "p-1 rounded-md hover:bg-neutral-200/50 transition-colors",
-              )}
-            >
-              <Pencil className="w-4 h-4" />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent>Edit message</TooltipContent>
-        </Tooltip>
-      )}
-      {role === "user" && currentModel && onRetrySame && onRetryModel && (
+      {currentModel && onRetrySame && onRetryModel && (
         <RetryDropdown
           currentModel={currentModel}
           onRetrySame={onRetrySame}
@@ -118,35 +103,50 @@ export function MessageActions({
           </Button>
         </RetryDropdown>
       )}
+      {role === "user" && onEdit && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={onEdit}
+              variant="ghost"
+              size="icon"
+              className="p-1 rounded-md hover:bg-neutral-200/50 transition-colors"
+            >
+              <Pencil className="w-4 h-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Edit message</TooltipContent>
+        </Tooltip>
+      )}
       {role === "assistant" && onBranch && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <button
+            <Button
               onClick={onBranch}
-              className={cn(
-                "p-1 rounded-md hover:bg-neutral-200/50 transition-colors",
-              )}
+              variant="ghost"
+              size="icon"
+              className="p-1 rounded-md hover:bg-neutral-200/50 transition-colors"
             >
               <GitBranch className="w-4 h-4" />
-            </button>
+            </Button>
           </TooltipTrigger>
           <TooltipContent>Branch conversation</TooltipContent>
         </Tooltip>
       )}
       <Tooltip>
         <TooltipTrigger asChild>
-          <button
+          <Button
             onClick={copyAsPlainText}
-            className={cn(
-              "p-1 rounded-md hover:bg-neutral-200/50 transition-colors",
-            )}
+            variant="ghost"
+            size="icon"
+            className="p-1 rounded-md hover:bg-neutral-200/50 transition-colors"
           >
             {copied ? (
               <Check className="w-4 h-4" />
             ) : (
               <Copy className="w-4 h-4" />
             )}
-          </button>
+          </Button>
         </TooltipTrigger>
         <TooltipContent>
           {copied ? "Copied!" : "Copy as plain text"}
@@ -154,18 +154,18 @@ export function MessageActions({
       </Tooltip>
       <Tooltip>
         <TooltipTrigger asChild>
-          <button
+          <Button
             onClick={copyAsMarkdown}
-            className={cn(
-              "p-1 rounded-md hover:bg-neutral-200/50 transition-colors",
-            )}
+            variant="ghost"
+            size="icon"
+            className="p-1 rounded-md hover:bg-neutral-200/50 transition-colors"
           >
             {copiedMarkdown ? (
               <Check className="w-4 h-4" />
             ) : (
               <ClipboardList className="w-4 h-4" />
             )}
-          </button>
+          </Button>
         </TooltipTrigger>
         <TooltipContent>
           {copiedMarkdown ? "Copied!" : "Copy as markdown"}

@@ -554,3 +554,72 @@ export const generateChatTitle = internalAction({
     }
   },
 });
+
+export const retryAssistantMessage = mutation({
+  args: {
+    messageId: v.id("messages"),
+    model: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const message = await ctx.db.get(args.messageId);
+    if (!message) throw new Error("Message not found");
+
+    const chat = await ctx.db.get(message.chatId);
+    if (!chat || chat.userId !== userId) {
+      throw new Error("Chat not found or unauthorized");
+    }
+
+    if (message.role !== "assistant") {
+      throw new Error("Can only retry assistant messages");
+    }
+
+    // Get all messages in the chat
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_chat", (q) => q.eq("chatId", message.chatId))
+      .collect();
+
+    // Find the index of the current message
+    const messageIndex = messages.findIndex((m) => m._id === args.messageId);
+    if (messageIndex <= 0) {
+      throw new Error("No previous user message found");
+    }
+
+    const previousUserMessage = messages[messageIndex - 1];
+    if (previousUserMessage.role !== "user") {
+      throw new Error("Previous message is not a user message");
+    }
+
+    // Delete both messages
+    await ctx.db.delete(args.messageId);
+    await ctx.db.delete(previousUserMessage._id);
+
+    // Resend the user message
+    await ctx.db.insert("messages", {
+      chatId: message.chatId,
+      role: "user",
+      content: previousUserMessage.content,
+      model: args.model,
+      fileIds: previousUserMessage.fileIds,
+      parts: previousUserMessage.parts,
+    });
+
+    await ctx.db.patch(message.chatId, {
+      lastMessageAt: Date.now(),
+    });
+
+    // Trigger AI response
+    await ctx.scheduler.runAfter(
+      0,
+      internal.messages.generateAIResponseStreaming,
+      {
+        userId,
+        chatId: message.chatId,
+        model: args.model,
+      },
+    );
+  },
+});
