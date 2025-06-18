@@ -219,12 +219,10 @@ export const getChat = query({
         if (message.fileIds && message.fileIds.length > 0) {
           const files = await Promise.all(
             message.fileIds.map(async (fileId) => {
-              const fileMetadata = await ctx.db.system.get(fileId);
               const url = await ctx.storage.getUrl(fileId);
               return {
                 id: fileId,
                 url,
-                metadata: fileMetadata,
               };
             }),
           );

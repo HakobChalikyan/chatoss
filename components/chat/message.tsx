@@ -44,13 +44,6 @@ interface MessageProps {
     files?: Array<{
       id: Id<"_storage">;
       url: string | null;
-      metadata: {
-        _id: Id<"_storage">;
-        _creationTime: number;
-        contentType?: string | undefined | undefined;
-        sha256: string;
-        size: number;
-      };
     }>;
   };
   chatId: Id<"chats">;
@@ -228,8 +221,8 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
             key={index}
             attachment={{
               url: file.url || "",
-              name: "Image",
-              contentType: file.metadata?.contentType || "",
+              name: "image",
+              contentType: "image",
             }}
             isUploading={false}
           />
