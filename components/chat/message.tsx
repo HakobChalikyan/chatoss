@@ -227,10 +227,10 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
         <DialogContent className="sm:max-w-md">
           <DialogHeader className="space-y-3">
             <DialogTitle className="flex items-center gap-2">
-              <Edit3 className="w-5 h-5 text-neutral-600" />
+              <Edit3 className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
               Edit Message
             </DialogTitle>
-            <DialogDescription className="text-sm leading-relaxed">
+            <DialogDescription className="text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
               Choose how you'd like to handle your edited message:
             </DialogDescription>
           </DialogHeader>
@@ -238,12 +238,14 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
           <div className="grid gap-3">
             <div
               onClick={() => handleEditConfirm(false)}
-              className="cursor-pointer flex items-start gap-3 p-3 rounded-lg border border-neutral-200 hover:bg-neutral-50 transition-colors"
+              className="cursor-pointer flex items-start gap-3 p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 transition-all duration-200"
             >
-              <RotateCcw className="w-4 h-4 text-neutral-600" />
+              <RotateCcw className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
               <div>
-                <p className="font-medium text-sm">Edit & Resubmit</p>
-                <p className="text-xs text-neutral-500 mt-1">
+                <p className="font-medium text-sm text-neutral-900 dark:text-neutral-100">
+                  Edit & Resubmit
+                </p>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
                   Replace the original message and regenerate the conversation
                 </p>
               </div>
@@ -251,14 +253,14 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
 
             <div
               onClick={() => handleEditConfirm(true)}
-              className="cursor-pointer flex items-start gap-3 p-3 rounded-lg border border-neutral-200 hover:bg-neutral-50 transition-colors"
+              className="cursor-pointer flex items-start gap-3 p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 transition-all duration-200"
             >
-              <GitBranch className="w-4 h-4 text-neutral-500" />
+              <GitBranch className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
               <div>
-                <p className="font-medium text-sm text-neutral-900">
+                <p className="font-medium text-sm text-neutral-900 dark:text-neutral-100">
                   Branch Off
                 </p>
-                <p className="text-xs text-neutral-500 mt-1">
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
                   Create a new conversation thread from this point
                 </p>
               </div>
@@ -266,11 +268,13 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
 
             <div
               onClick={() => setShowEditDialog(false)}
-              className="cursor-pointer flex items-start gap-3 p-3 rounded-lg border border-neutral-200 hover:bg-neutral-50 transition-colors"
+              className="cursor-pointer flex items-start gap-3 p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 transition-all duration-200"
             >
-              <X className="w-4 h-4 text-neutral-500 mt-1" />
+              <X className="w-4 h-4 text-neutral-500 dark:text-neutral-400 mt-1" />
               <div>
-                <p className="font-medium text-sm text-neutral-900">Cancel</p>
+                <p className="font-medium text-sm text-neutral-900 dark:text-neutral-100">
+                  Cancel
+                </p>
               </div>
             </div>
           </div>
