@@ -101,31 +101,37 @@ export function ChatInput({
                 selectedModel={selectedModel}
                 onModelSelect={onModelSelect}
               />
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={(e) => e.target.files && onFileUpload(e.target.files)}
-                multiple
-                className="hidden"
-                accept="image/*"
-              />
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className={cn(
-                  "text-xs transition-colors glass bg-white/10 border-white/20 hover:bg-white/20 hover:border-white/30",
-                  "dark:bg-neutral-800/20 dark:border-neutral-600/30 dark:hover:bg-neutral-700/30 dark:hover:border-neutral-500/40",
-                )}
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading || isStreaming}
-              >
-                {isUploading ? (
-                  <div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-neutral-500 rounded-full animate-spin" />
-                ) : (
-                  <Paperclip className="h-4 w-4" />
-                )}
-              </Button>
+              {selectedModel.capabilities.imageUpload && (
+                <>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={(e) =>
+                      e.target.files && onFileUpload(e.target.files)
+                    }
+                    multiple
+                    className="hidden"
+                    accept="image/*"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className={cn(
+                      "text-xs transition-colors glass bg-white/10 border-white/20 hover:bg-white/20 hover:border-white/30",
+                      "dark:bg-neutral-800/20 dark:border-neutral-600/30 dark:hover:bg-neutral-700/30 dark:hover:border-neutral-500/40",
+                    )}
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading || isStreaming}
+                  >
+                    {isUploading ? (
+                      <div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-neutral-500 rounded-full animate-spin" />
+                    ) : (
+                      <Paperclip className="h-4 w-4" />
+                    )}
+                  </Button>
+                </>
+              )}
             </div>
             {isStreaming ? (
               <Button
