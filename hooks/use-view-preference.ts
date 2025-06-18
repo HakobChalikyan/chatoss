@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 const VIEW_PREFERENCE_KEY = "view_preference";
 

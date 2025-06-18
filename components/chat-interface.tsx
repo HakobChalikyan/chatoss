@@ -249,7 +249,7 @@ export function ChatInterface({
             </div>
 
             {/* Category buttons with enhanced dark mode styling */}
-            <div className="flex flex-wrap gap-3 mb-6 justify-center">
+            <div className="flex flex-wrap gap-3 mb-6">
               {categories.map((category, index) => (
                 <Button
                   key={category.id}
