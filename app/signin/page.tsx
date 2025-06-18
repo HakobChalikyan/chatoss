@@ -8,12 +8,10 @@ import { useState } from "react";
 export default function SignIn() {
   const { signIn } = useAuthActions();
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   const handleGoogleSignIn = async () => {
     try {
       await signIn("google");
-      router.push("/");
     } catch (error) {
       setError(
         error instanceof Error
