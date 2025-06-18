@@ -13,7 +13,7 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { Messages } from "./chat/messages";
 import { ChatInput } from "./chat/chat-input";
 import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
-import { AI_MODELS } from "@/lib/ai-models";
+import { AI_MODELS, AIModel } from "@/lib/ai-models";
 import { categories, suggestedQuestions } from "@/lib/suggested-questions-data";
 import {
   Dialog,
@@ -34,7 +34,10 @@ export function ChatInterface({
   onChatCreated,
 }: ChatInterfaceProps) {
   const [input, setInput] = React.useState("");
-  const [selectedModel, setSelectedModel] = React.useState(AI_MODELS[0]);
+  const [selectedModel, setSelectedModel] = React.useState(() => {
+    const savedModel = localStorage.getItem("selectedModel");
+    return savedModel ? JSON.parse(savedModel) : AI_MODELS[0];
+  });
   const [uploadedFiles, setUploadedFiles] = React.useState<
     Array<{ file: File }>
   >([]);
@@ -190,6 +193,11 @@ export function ChatInterface({
       (question) => question.category === selectedCategory,
     );
   }, [selectedCategory]);
+
+  const handleModelSelect = (model: AIModel) => {
+    setSelectedModel(model);
+    localStorage.setItem("selectedModel", JSON.stringify(model));
+  };
 
   React.useEffect(() => {
     const observeHeight = () => {
@@ -366,7 +374,7 @@ export function ChatInterface({
             isCreating={isCreating}
             isStreaming={isStreaming}
             selectedModel={selectedModel}
-            onModelSelect={setSelectedModel}
+            onModelSelect={handleModelSelect}
           />
         </div>
       </div>
