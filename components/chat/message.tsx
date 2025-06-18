@@ -8,7 +8,7 @@ import { Markdown } from "../markdown";
 import { PreviewAttachment } from "../preview-attachment";
 import { MessageActions } from "./message-actions";
 import { useState, useRef, useEffect } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
 import {
