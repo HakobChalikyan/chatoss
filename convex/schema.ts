@@ -63,31 +63,10 @@ export default defineSchema({
       ),
     ),
   }).index("by_chat", ["chatId"]),
-
-  messages_v2: defineTable({
-    chatId: v.id("chats"),
-    role: v.union(v.literal("user"), v.literal("assistant")),
-    parts: v.any(),
-    fileIds: v.optional(v.array(v.id("_storage"))),
-    isStreaming: v.optional(v.boolean()),
-  }).index("by_chat", ["chatId"]),
-
-  documents: defineTable({
-    title: v.string(),
-    content: v.optional(v.string()),
-    kind: v.union(
-      v.literal("text"),
-      v.literal("code"),
-      v.literal("image"),
-      v.literal("sheet"),
-    ),
-    userId: v.id("users"),
-  }),
   streamControllers: defineTable({
     chatId: v.id("chats"),
     messageId: v.id("messages"),
-  })
-    .index("by_chat", ["chatId"]),
+  }).index("by_chat", ["chatId"]),
   folders: defineTable({
     userId: v.id("users"),
     name: v.string(),
