@@ -1,46 +1,108 @@
-# Welcome to your Convex + Next.js + Convex Auth app
+# ChatOSS
 
-This is a [Convex](https://convex.dev/) project created with [`npm create convex`](https://www.npmjs.com/package/create-convex).
+**ChatOSS** is an open-source AI chatbot platform that lets users chat with various models, organize conversations, and explore multiple response paths — all within a clean, extensible interface powered by [Convex](https://www.convex.dev/).
 
-After the initial setup (<2 minutes) you'll have a working full-stack app using:
+---
 
-- Convex as your backend (database, server logic)
-- [React](https://react.dev/) as your frontend (web page interactivity)
-- [Next.js](https://nextjs.org/) for optimized web hosting and page routing
-- [Tailwind](https://tailwindcss.com/) for building great looking accessible UI
-- [Convex Auth](https://labs.convex.dev/auth) for authentication
+## 🚀 Features
 
-## Get started
+- 💬 **Multi-model chat** – Talk to any AI model you configure
+- 🔀 **Branching chats** – Fork any message to explore alternate responses
+- ♻️ **Resend prompts** – Retry prompts with different models
+- 🗂️ **Folder system** – Organize your chats like files
+- 🔍 **Filter by model capabilities** – Search by cost, features, and more
+- 🖼️ **Image uploads** – Send images to supported models
+- 🔑 **Bring your own API key** – Use your own [OpenRouter](https://openrouter.ai) key
+- 🔐 **Google Auth** – Sign in with Google
+- 🧠 **Real-time backend** – Built on Convex
+- ⚡ **TypeScript-first** – Fully typed, modern codebase
 
-If you just cloned this codebase and didn't use `npm create convex`, run:
+---
 
-```
+## 📦 Tech Stack
+
+- **Frontend**: React + Next.js + TypeScript
+- **Backend**: [Convex](https://www.convex.dev/)
+- **Auth**: Google OAuth via Convex Auth
+- **AI Integration**: [OpenRouter](https://openrouter.ai)
+
+---
+
+## 🛠️ Getting Started
+
+### 1. Clone and Install
+
+```bash
+git clone https://github.com/HakobChalikyan/chatoss.git
+cd chatoss
 npm install
+````
+
+---
+
+### 2. Convex Setup
+
+To set up the Convex backend:
+
+```bash
+npm run dev
+```
+You'll be prompted to:
+
+* Create a new project
+* Choose between cloud or local deployment (recommend **cloud**)
+
+After setup, the Convex dashboard will be launched.
+
+---
+
+### 3. Environment Variables
+
+Convex uses cloud environment variables that can be set from the CLI or project settings dashboard.
+
+#### Required Variables
+
+```bash
+npx convex env set AUTH_GOOGLE_ID <your-google-client-id>
+npx convex env set AUTH_GOOGLE_SECRET <your-google-secret>
+npx convex env set ENCRYPTION_KEY <your-encryption-key>
+```
+
+To generate a secure `ENCRYPTION_KEY`, run:
+
+```bash
+openssl rand -hex 16
+```
+
+> You don't need to add these to `.env.local`. Convex will handle them in the cloud.
+
+---
+
+### 4. Run the App Locally
+
+To run both the frontend and backend together:
+
+```bash
 npm run dev
 ```
 
-If you're reading this README on GitHub and want to use this template, run:
+This command will:
 
-```
-npm create convex@latest -- -t nextjs-convexauth
-```
+* Run `next dev` for the frontend
+* Run `convex dev` for the backend
 
-## Learn more
+---
 
-To learn more about developing your project with Convex, check out:
+## 🌐 Useful Links
 
-- The [Tour of Convex](https://docs.convex.dev/get-started) for a thorough introduction to Convex principles.
-- The rest of [Convex docs](https://docs.convex.dev/) to learn about all Convex features.
-- [Stack](https://stack.convex.dev/) for in-depth articles on advanced topics.
-- [Convex Auth docs](https://labs.convex.dev/auth) for documentation on the Convex Auth library.
+* Project Website: *Coming soon*
+* Get an OpenRouter API Key: https://openrouter.ai/settings/keys
+* Convex Docs: [https://docs.convex.dev](https://docs.convex.dev)
 
-## Configuring other authentication methods
+---
 
-To configure different authentication methods, see [Configuration](https://labs.convex.dev/auth/config) in the Convex Auth docs.
+## 🧑‍💻 License
 
-## Join the community
+[MIT](LICENSE)
 
-Join thousands of developers building full-stack apps with Convex:
-
-- Join the [Convex Discord community](https://convex.dev/community) to get help in real-time.
-- Follow [Convex on GitHub](https://github.com/get-convex/), star and contribute to the open-source implementation of Convex.
+---
