@@ -465,7 +465,6 @@ export function Message({ message, chatId, branchedChats }: MessageProps) {
                 {message.isStreaming && !message.content && (
                   <div className="glass bg-white/10 px-3 py-2 rounded-lg border border-white/20 flex items-center gap-2">
                     <StreamingIndicator />
-                    <span>AI is thinking...</span>
                   </div>
                 )}
               </div>

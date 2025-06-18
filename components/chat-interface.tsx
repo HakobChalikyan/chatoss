@@ -255,7 +255,7 @@ export function ChatInterface({
                     "dark:bg-neutral-800/30 dark:hover:bg-neutral-700/40 dark:border-neutral-600/30 dark:hover:border-neutral-500/40",
                     "backdrop-blur-sm transition-all duration-300",
                     selectedCategory === category.id &&
-                      "bg-white/20 dark:bg-neutral-700/40",
+                      "bg-white/40 dark:bg-neutral-600/60 border-white/40 dark:border-neutral-400/60 shadow-lg",
                   )}
                   style={{ animationDelay: `${index * 100}ms` }}
                   onClick={() => setSelectedCategory(category.id)}
@@ -280,8 +280,8 @@ export function ChatInterface({
                   key={index}
                   variant="ghost"
                   className={cn(
-                    "w-full justify-start text-left h-auto py-2 px-4 rounded-xl hover-lift",
-                    "glass bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20",
+                    "w-full justify-start text-left h-auto py-2 px-4 rounded-xl cursor-pointer hover-lift",
+                    "glass bg-white/5 hover:bg-white/25 border border-white/10 hover:border-white/40",
                     "dark:bg-neutral-800/20 dark:hover:bg-neutral-700/30 dark:border-neutral-600/20 dark:hover:border-neutral-500/30",
                     "transition-all duration-300",
                   )}
