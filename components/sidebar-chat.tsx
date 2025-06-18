@@ -142,7 +142,7 @@ export function SidebarChat({
         <div
           key={chat._id}
           onClick={handleChatClick}
-          draggable
+          draggable={!isRenaming}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
           className={cn(
