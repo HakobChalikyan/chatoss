@@ -88,6 +88,18 @@ export const AI_MODELS: AIModel[] = [
     model: "2.5 Pro",
   },
   {
+    id: "google/gemma-3-4b-it:free",
+    name: "Google: Gemma 3 4B (free)",
+    description: "",
+    capabilities: {
+      reasoning: false,
+      imageUpload: false,
+    },
+    isFree: true,
+    family: "Gemma",
+    model: "Gemma 3 4B",
+  },
+  {
     id: "openai/gpt-4o-mini",
     name: "OpenAI: GPT 4o-mini",
     description: "",
