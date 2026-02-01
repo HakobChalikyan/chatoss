@@ -5,6 +5,7 @@ import {
   internalMutation,
   internalAction,
 } from "./_generated/server";
+import { Doc } from "./_generated/dataModel";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { api, internal } from "./_generated/api";
 
@@ -101,7 +102,7 @@ export const generateAIResponseStreaming = internalAction({
       chatId: args.chatId,
     });
 
-    const openaiMessages = messages.map((msg: any) => {
+    const openaiMessages = messages.map((msg: Doc<"messages">) => {
       if (msg.parts) {
         return {
           role: msg.role as "user" | "assistant",
@@ -511,21 +512,13 @@ export const generateChatTitle = internalAction({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "meta-llama/llama-4-scout:free",
+            model: "google/gemma-3-4b-it:free",
             messages: [
               {
-                role: "system",
-                content:
-                  "You are a helpful assistant that generates concise, descriptive titles for chat conversations. Generate a title that is 3-6 words long based on the user's message. Only respond with the title, nothing else.",
-              },
-              {
                 role: "user",
-                content: args.message,
+                content: `Generate a concise, descriptive title (3-6 words) for a chat that starts with this message. Only respond with the title, nothing else.\n\nMessage: ${args.message}`,
               },
             ],
-            reasoning: {
-              enabled: false,
-            },
           }),
         },
       );
